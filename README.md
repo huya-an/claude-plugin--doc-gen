@@ -131,7 +131,19 @@ docs/
 
 - Claude Code CLI
 - Python 3.10+ (for MkDocs site generation)
-- pip install mkdocs (if using `/doc-site`)
+- MkDocs packages: `pip install mkdocs mkdocs-material pymdown-extensions`
+  - If not installed, `/doc-site` will prompt to install them
+
+## Environment Variables (for S3 publishing)
+
+If you want to use `/doc-publish` or the publish option in `/doc-all`, set these:
+
+```bash
+export SITE_S3_BUCKET="your-bucket-name"    # S3 bucket for hosting
+export SITE_PROFILE="default"               # AWS CLI profile to use
+```
+
+If not set, you will be prompted to provide them.
 
 ## License
 

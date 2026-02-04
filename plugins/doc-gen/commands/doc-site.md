@@ -16,10 +16,25 @@ You are running the `/doc-site` command — Phase 2 of documentation generation.
 
 Check that `docs/md/` contains markdown files (Glob: `docs/md/*.md`). If empty or missing, tell the user to run `/doc-generate` first and stop.
 
-### Step 1: Verify Build Tools
+### Step 1: Verify MkDocs Installation
 
-1. Verify mkdocs is installed: `which mkdocs`
-2. If missing, tell the user: `pip install mkdocs mkdocs-material pymdown-extensions`
+Run: `which mkdocs`
+
+If mkdocs is NOT installed, use AskUserQuestion:
+```
+MkDocs is required but not installed. How would you like to proceed?
+
+Options:
+1. Install now (Recommended) — runs: pip install mkdocs mkdocs-material pymdown-extensions
+2. I'll install it manually
+```
+
+If user chooses option 1, run:
+```bash
+pip install mkdocs mkdocs-material pymdown-extensions
+```
+
+Verify installation with `which mkdocs`. If still not found, stop and tell user to check their Python/pip setup.
 
 ### Step 2: Inventory & Plan
 
@@ -101,7 +116,7 @@ To view: open docs/site/index.html
 ### Error Handling
 
 - If `mkdocs build` fails, display the error output and suggest fixes
-- If mkdocs is not installed, tell user: `pip install mkdocs mkdocs-material pymdown-extensions`
+- If mkdocs is not installed and user declines auto-install: `pip install mkdocs mkdocs-material pymdown-extensions`
 - Report all failures in the summary with specific error details
 
 ### Important Rules

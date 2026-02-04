@@ -121,14 +121,18 @@ Read `{SKILLS_DIR}/doc-validate-md/SKILL.md`, spawn Task agent, display results.
 
 Use AskUserQuestion:
 - "Publish to S3?" with options:
-  - "Yes — publish to s3://repo-documentation-918308113460/{directory-name}/"
+  - "Yes — publish to S3"
   - "No — just local site"
 
 If yes:
-1. Determine directory name from git repo name or current directory basename
-2. Verify AWS CLI: `aws sts get-caller-identity`
-3. Upload: `aws s3 sync docs/site/ s3://repo-documentation-918308113460/{directory-name}/ --delete`
-4. Fix content types for .html, .css, .js files
+1. Check environment variables `$SITE_S3_BUCKET` and `$SITE_PROFILE`
+2. If either is not set, use AskUserQuestion to prompt for them:
+   - For bucket: "S3 bucket not configured. Please provide the bucket name:"
+   - For profile: "AWS profile not configured. Which profile? (default, or enter name)"
+3. Determine directory name from git repo name or current directory basename
+4. Verify AWS CLI: `aws sts get-caller-identity --profile $SITE_PROFILE`
+5. Upload: `aws s3 sync docs/site/ s3://$SITE_S3_BUCKET/{directory-name}/ --delete --profile $SITE_PROFILE`
+6. Fix content types for .html, .css, .js files
 
 ### Step 5: Final Summary
 
@@ -161,7 +165,7 @@ Pipeline: 4 waves → mkdocs build
 Validation: {PASS/FAIL}
 
 Local: file://{absolute_path}/docs/site/index.html
-{If published: S3: https://repo-documentation-918308113460.s3.amazonaws.com/{directory-name}/index.html}
+{If published: S3: https://$SITE_S3_BUCKET.s3.amazonaws.com/{directory-name}/index.html}
 ```
 
 ### Error Handling
