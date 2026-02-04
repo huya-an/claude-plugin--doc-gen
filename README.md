@@ -19,22 +19,20 @@ Output is a static HTML site with Mermaid diagrams, viewable via `file://` in an
 
 ## Installation
 
-### Option 1: Install from GitHub (Recommended)
+Clone the repo into your Claude Code plugins directory:
 
 ```bash
-/plugin https://github.com/huya-an/claude-plugin--doc-gen
+git clone https://github.com/huya-an/claude-plugin--doc-gen.git ~/.claude/plugins/claude-doc-gen
 ```
 
-This will install the plugin directly from GitHub.
-
-### Option 2: Manual Installation
-
-Clone and symlink:
+Or clone elsewhere and symlink:
 
 ```bash
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git
 ln -s "$(pwd)/claude-plugin--doc-gen" ~/.claude/plugins/claude-doc-gen
 ```
+
+Then restart Claude Code to load the plugin.
 
 ## Quick Start
 
