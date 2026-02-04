@@ -117,12 +117,14 @@ For each affected wave (in order 1 → 2 → 3 → 4):
 
 ### Step 6: Rebuild HTML Site
 
+**CRITICAL: Always use `mkdocs build`. Never manually convert markdown to HTML.**
+
 Check if `docs/site/` exists. If it does:
 
-1. Verify `mkdocs.yml` exists and mkdocs-drawio-plugin is installed
+1. Verify `mkdocs.yml` exists and mkdocs is installed (`which mkdocs`)
 2. If navigation changed (sections added/removed), update `nav:` in `mkdocs.yml`
 3. Run `mkdocs build` to rebuild the entire site
-4. Verify output: count HTML pages, count `class="mxgraph"` embeds, check for unconverted Mermaid blocks
+4. Verify output: count HTML pages, count Mermaid blocks (`class="mermaid"`)
 
 If `docs/site/` doesn't exist, skip HTML rebuild and suggest running `/doc-site`.
 

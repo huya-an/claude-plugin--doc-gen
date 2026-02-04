@@ -105,14 +105,15 @@ Read `{SKILLS_DIR}/doc-validate-md/SKILL.md`, spawn Task agent, display results.
 
 ### Step 3: Build Site — MkDocs Build
 
-1. Verify `mkdocs.yml` exists and mkdocs-drawio-plugin is installed
+**CRITICAL: Always use `mkdocs build`. Never manually convert markdown to HTML.**
+
+1. Verify `mkdocs.yml` exists and mkdocs is installed (`which mkdocs`)
 2. Read frontmatter from all markdown files, generate `nav:` section for `mkdocs.yml`
 3. Create `docs/md/index.md` if missing (project name, section links, generation date)
 4. Run `mkdocs build`
 5. Verify output:
    - Count HTML pages
-   - Count `class="mxgraph"` embeds
-   - Check for unconverted `` ```mermaid `` blocks (CRITICAL if found)
+   - Count Mermaid blocks (`class="mermaid"`)
    - Check for legacy `<!-- diagram-meta` markers (CRITICAL if found)
 6. Run site validation: read `{SKILLS_DIR}/doc-validate-site/SKILL.md`, spawn Task agent, display results
 
@@ -155,7 +156,7 @@ Then display:
 Documentation Complete
 =======================
 Markdown: docs/md/ ({md_count} files)
-Site: docs/site/ ({html_count} pages, {diagram_count} draw.io embeds)
+Site: docs/site/ ({html_count} pages, {diagram_count} Mermaid diagrams)
 Pipeline: 4 waves → mkdocs build
 Validation: {PASS/FAIL}
 

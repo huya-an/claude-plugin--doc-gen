@@ -15,7 +15,7 @@ Analyzes your codebase and produces:
 - **Testing strategy** with test inventory and coverage analysis
 - **Code quality** with tech debt assessment and recommendations
 
-Output is a static HTML site with interactive draw.io diagrams, viewable via `file://` in any browser. No web server needed.
+Output is a static HTML site with Mermaid diagrams, viewable via `file://` in any browser. No web server needed.
 
 ## Installation
 
@@ -79,7 +79,7 @@ open docs/site/index.html
 
 **Phase 1 (Markdown):** Forked agents analyze source code and produce markdown files. Diagrams are Mermaid fenced code blocks.
 
-**Phase 2 (HTML Site):** MkDocs with the mkdocs-drawio-plugin converts markdown to static HTML, replacing Mermaid blocks with interactive draw.io XML embeds. The draw.io viewer JS is bundled locally for offline viewing.
+**Phase 2 (HTML Site):** `mkdocs build` converts markdown to static HTML. Mermaid diagrams render client-side in the browser via Mermaid.js.
 
 ### Forked Agent Model
 
@@ -116,15 +116,15 @@ docs/
 │   ├── arch-c4-level1.md
 │   ├── api-index.md
 │   └── ...
-└── site/                       # Phase 2: Static HTML site
-    ├── index.html              # Dashboard with stats
+└── site/                       # Phase 2: Static HTML site (mkdocs build)
+    ├── index.html
     ├── arch-overview.html
     ├── api-index.html
-    ├── css/
-    ├── js/
-    │   └── viewer-static.min.js  # draw.io viewer (bundled)
-    └── diagrams/
-        └── *.drawio            # Editable diagram files
+    ├── assets/
+    │   ├── stylesheets/
+    │   └── javascripts/
+    └── search/
+        └── search_index.json
 ```
 
 ## Requirements

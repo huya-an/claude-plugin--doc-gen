@@ -1,12 +1,16 @@
 # /doc-site — Build Static HTML Site
 
-Convert markdown documentation with Mermaid diagrams into a static HTML site using `mkdocs build`. The mkdocs-drawio-plugin converts Mermaid blocks to interactive draw.io embeds.
+Convert markdown documentation into a static HTML site using `mkdocs build`. Mermaid diagrams render client-side in the browser.
 
 ## Instructions
 
 You are running the `/doc-site` command — Phase 2 of documentation generation.
 
-**This command runs `mkdocs build` to convert Phase 1 markdown output (with Mermaid diagrams) into a polished HTML site with interactive draw.io diagram embeds.**
+**This command runs `mkdocs build` to convert Phase 1 markdown output into a polished HTML site.**
+
+### Critical Rule
+
+**NEVER manually convert markdown to HTML.** Always use `mkdocs build`. MkDocs handles all conversion, templating, navigation, and styling.
 
 ### Prerequisites
 
@@ -14,11 +18,8 @@ Check that `docs/md/` contains markdown files (Glob: `docs/md/*.md`). If empty o
 
 ### Step 1: Verify Build Tools
 
-1. Check `mkdocs.yml` exists in the project root
-2. Verify mkdocs is installed: `mkdocs --version`
-3. Verify mkdocs-drawio-plugin is installed: `pip show mkdocs-drawio-plugin`
-
-If any are missing, tell the user what to install and stop.
+1. Verify mkdocs is installed: `which mkdocs`
+2. If missing, tell the user: `pip install mkdocs mkdocs-material pymdown-extensions`
 
 ### Step 2: Inventory & Plan
 
@@ -31,7 +32,7 @@ Site Generation Plan
 Markdown files: {count}
 Pages with Mermaid diagrams: {count_with_diagrams}
 Total Mermaid blocks: {total_diagrams}
-Build tool: mkdocs build (with mkdocs-drawio-plugin)
+Build tool: mkdocs build
 
 Starting site generation...
 ```
@@ -47,7 +48,7 @@ nav:
     - Overview: arch-overview.md
     - C4 Level 1 — System Context: arch-c4-level1.md
     - C4 Level 2 — Containers: arch-c4-level2.md
-  - API Plane:
+  - API:
     - Endpoint Index: api-index.md
 ```
 
@@ -67,34 +68,32 @@ If `docs/md/index.md` does not exist, create it:
 mkdocs build
 ```
 
-This converts all markdown to HTML and all Mermaid blocks to draw.io embeds.
+This single command:
+- Converts all markdown to HTML
+- Applies Material for MkDocs theme
+- Generates navigation, search, and sitemap
+- Preserves Mermaid blocks for client-side rendering
+- Outputs to `docs/site/`
+
+**Do not add any post-processing.** MkDocs output is final.
 
 ### Step 6: Verify Output
 
 1. Count HTML pages: Glob `docs/site/**/*.html`
-2. Count draw.io embeds: Grep for `class="mxgraph"` across all HTML
-3. Check for unconverted Mermaid: Grep for `` ```mermaid `` in HTML — CRITICAL if found
-4. Check for legacy markers: Grep for `<!-- diagram-meta` or `<!-- diagram:` in HTML — CRITICAL if found
+2. Verify Mermaid blocks: Grep for `class="mermaid"` in HTML
+3. Check for legacy markers: Grep for `<!-- diagram-meta` or `<!-- diagram:` — CRITICAL if found
 
-### Step 7: Run Validation
-
-1. Locate `{SKILLS_DIR}/doc-validate-site/SKILL.md` if it exists
-2. Spawn a Task agent to do site-wide validation
-3. Display validation results
-
-### Step 8: Summary
+### Step 7: Summary
 
 ```
 Site Generation Complete
 =========================
 Total HTML pages: {count}
-Total draw.io embeds: {diagram_count}
-Unconverted Mermaid blocks: {count} (must be 0)
+Total Mermaid blocks: {diagram_count}
+Legacy markers: {count} (must be 0)
 
 Site location: docs/site/
 File URL: file://{absolute_path}/docs/site/index.html
-
-Validation: {PASS/FAIL}
 
 To view: open docs/site/index.html
 ```
@@ -102,11 +101,13 @@ To view: open docs/site/index.html
 ### Error Handling
 
 - If `mkdocs build` fails, display the error output and suggest fixes
-- If the mkdocs-drawio-plugin is not installed, tell user to install it: `pip install -e ./mkdocs-drawio-plugin`
+- If mkdocs is not installed, tell user: `pip install mkdocs mkdocs-material pymdown-extensions`
 - Report all failures in the summary with specific error details
 
 ### Important Rules
 
-- **ZERO unconverted Mermaid blocks in final HTML** — every Mermaid block must be converted by the plugin
-- **ZERO legacy diagram markers** — if found, Phase 1 skills need re-running
+- **Always use `mkdocs build`** — never manually convert markdown to HTML
+- **Mermaid.js renders client-side** — no server-side conversion needed
+- **Do not modify HTML after build** — MkDocs output is final
+- **Zero legacy markers** — if any `<!-- diagram:` markers remain, Phase 1 needs re-running
 - Use `subagent_type: "general-purpose"` for all agents

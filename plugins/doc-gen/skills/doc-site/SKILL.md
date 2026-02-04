@@ -1,14 +1,23 @@
 # doc-site
 
 ## Description
-Phase 2 site generator: runs `mkdocs build` to convert markdown documentation with Mermaid diagrams into a static HTML/CSS site. Uses local Mermaid.js for diagram display (works offline and via file:// protocol).
+Phase 2 site generator: runs `mkdocs build` to convert markdown documentation into a static HTML site. Mermaid diagrams render client-side in the browser.
 
 ## Context
 fork
 
 ## Instructions
 
-You are the **Site Generator Agent**. You convert Phase 1 markdown output into a polished static HTML documentation site by running `mkdocs build`.
+You are the **Site Generator Agent**. Your ONLY job is to run `mkdocs build`. You MUST NOT manually convert markdown to HTML.
+
+### Critical Rule
+
+**NEVER manually convert markdown to HTML.** Always use `mkdocs build`. MkDocs handles all conversion, templating, navigation, and styling. Your job is to:
+1. Configure `mkdocs.yml` if needed
+2. Run `mkdocs build`
+3. Verify the output
+
+That's it. No custom HTML generation. No manual file conversion.
 
 ### Inputs
 
@@ -19,11 +28,12 @@ You are the **Site Generator Agent**. You convert Phase 1 markdown output into a
 ### Step 1: Verify Prerequisites
 
 1. Verify `docs/md/` has markdown files — if empty, tell the user to run `/doc-generate` first and stop
-2. Verify `mkdocs` is installed: run `which mkdocs` — if not found, tell the user to install it with `pip install mkdocs mkdocs-material pymdown-extensions`
+2. Verify `mkdocs` is installed: run `which mkdocs`
+   - If not found, tell user: `pip install mkdocs mkdocs-material pymdown-extensions`
 
 ### Step 2: Create or Update mkdocs.yml
 
-If `mkdocs.yml` does not exist, create it. The configuration should include:
+If `mkdocs.yml` does not exist in the project root, create it:
 
 ```yaml
 site_name: {Project Name} Documentation
@@ -69,11 +79,10 @@ markdown_extensions:
   - tables
 
 extra_javascript:
-  - js/mermaid.min.js
-  - js/mermaid-init.js
+  - https://unpkg.com/mermaid@10/dist/mermaid.esm.min.mjs
 
 nav:
-  # Generated from frontmatter
+  # Will be generated from frontmatter
 ```
 
 ### Step 3: Generate Navigation from Frontmatter
@@ -91,42 +100,11 @@ nav:
     - Endpoint Index: api-index.md
   - Data:
     - Overview: data-overview.md
-    - Schema: data-schema.md
 ```
 
 Update the `nav:` section in `mkdocs.yml` with the generated navigation.
 
-### Step 4: Download Mermaid.js Locally
-
-Download Mermaid.js to `docs/md/js/` if it doesn't exist (required for file:// protocol and offline use):
-
-```bash
-mkdir -p docs/md/js
-if [ ! -f docs/md/js/mermaid.min.js ]; then
-  curl -o docs/md/js/mermaid.min.js https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
-fi
-```
-
-### Step 5: Create Mermaid Init Script
-
-Create `docs/md/js/mermaid-init.js` if it doesn't exist:
-
-```javascript
-// Fix MkDocs structure: move content from <code> to parent <pre>
-document.querySelectorAll('pre.mermaid > code').forEach(function(codeEl) {
-    var preEl = codeEl.parentElement;
-    preEl.textContent = codeEl.textContent;
-});
-
-// Initialize Mermaid.js
-mermaid.initialize({
-    startOnLoad: true,
-    theme: 'default',
-    securityLevel: 'loose'
-});
-```
-
-### Step 6: Create Index Page
+### Step 4: Create Index Page
 
 If `docs/md/index.md` does not exist, create it with:
 - Project name from `.doc-plan.json`
@@ -134,25 +112,28 @@ If `docs/md/index.md` does not exist, create it with:
 - Links to each section's overview page
 - Generation date
 
-### Step 7: Run MkDocs Build
+### Step 5: Run MkDocs Build
 
 ```bash
 mkdocs build
 ```
 
-This will:
-- Convert all markdown to HTML using Material for MkDocs theme
-- Preserve ` ```mermaid ` blocks as `<pre class="mermaid">` elements
-- Include local Mermaid.js for client-side diagram rendering (works via file:// and offline)
-- Output the complete site to `docs/site/`
+This single command does everything:
+- Converts all markdown to HTML
+- Applies Material for MkDocs theme
+- Generates navigation, search index, and sitemap
+- Preserves Mermaid blocks as `<pre class="mermaid">` for client-side rendering
+- Outputs to `docs/site/`
 
-### Step 8: Verify Output
+**Do not add any post-processing steps.** MkDocs output is final.
+
+### Step 6: Verify Output
 
 After the build completes:
 
-1. **Count HTML pages**: Glob `docs/site/**/*.html` — verify count matches markdown file count
-2. **Count Mermaid blocks**: Grep for `class="mermaid"` across all HTML files — verify diagrams are present
-3. **Check for legacy markers**: Grep for `<!-- diagram-meta` or `<!-- diagram:` in HTML files — CRITICAL if found
+1. **Count HTML pages**: Glob `docs/site/**/*.html`
+2. **Verify Mermaid blocks**: Grep for `class="mermaid"` in HTML files
+3. **Check for legacy markers**: Grep for `<!-- diagram-meta` or `<!-- diagram:` — CRITICAL if found
 
 Display:
 ```
@@ -163,21 +144,24 @@ Mermaid diagram blocks: {count}
 Legacy diagram markers: {count} (must be 0)
 
 Site location: docs/site/
-Open: docs/site/index.html
+Open: file://{absolute_path}/docs/site/index.html
 ```
 
 ### Rules
-- Mermaid.js renders diagrams client-side in the browser — no server-side conversion needed
-- Do not modify the generated HTML after `mkdocs build`
-- Zero legacy `<!-- diagram:` markers — if any remain, Phase 1 skills need updating
+
+1. **Always use `mkdocs build`** — never manually convert markdown to HTML
+2. **Mermaid.js renders client-side** — no server-side diagram conversion
+3. **Do not modify HTML after build** — MkDocs output is final
+4. **Zero legacy markers** — if any `<!-- diagram:` markers remain, Phase 1 needs re-running
 
 ## Tools
 - Read
 - Glob
 - Grep
 - Write
+- Edit
 - Bash (for running mkdocs build)
 
 ## Output
-Complete static site in `docs/site/` (generated by mkdocs build)
-Updated `mkdocs.yml` with navigation
+- Complete static site in `docs/site/` (generated by mkdocs build)
+- Updated `mkdocs.yml` with navigation
