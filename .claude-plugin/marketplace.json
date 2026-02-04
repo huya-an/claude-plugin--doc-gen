@@ -1,0 +1,17 @@
+{
+  "name": "doc-gen",
+  "version": "1.0.0",
+  "description": "Generates comprehensive documentation for any codebase: architecture (C4), API, ADRs, security, DevOps, data, events, testing, and code quality. Produces markdown with Mermaid diagrams, then converts to a static HTML site with interactive draw.io diagrams.",
+  "repository": "https://github.com/huya-an/claude-plugin--doc-gen",
+  "owner": {
+    "name": "huya-an"
+  },
+  "plugins": [
+    {
+      "name": "documentation-generator",
+      "source": "./plugins/doc-gen",
+      "description": "Documentation Generator",
+      "version": "1.0.0"
+    }
+  ]
+}

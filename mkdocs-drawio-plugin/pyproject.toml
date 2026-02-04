@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkdocs-drawio-plugin"
+version = "0.1.0"
+description = "MkDocs plugin that converts Mermaid diagrams to interactive draw.io embeds"
+requires-python = ">=3.10"
+dependencies = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "pymdown-extensions>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.entry-points."mkdocs.plugins"]
+drawio = "mkdocs_drawio_plugin.plugin:DrawioPlugin"
+
+[project.scripts]
+mermaid-to-drawio = "mkdocs_drawio_plugin.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["mkdocs_drawio_plugin*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

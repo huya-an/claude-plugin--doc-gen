@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block libs %}
+  {{ super() }}
+  {# draw.io viewer is loaded via extra_javascript in mkdocs.yml #}
+{% endblock %}
+
+{% block styles %}
+  {{ super() }}
+  <style>
+    /* Ensure draw.io diagrams are responsive within content area */
+    .drawio-diagram {
+      margin: 1.5em 0;
+      width: 100% !important;
+    }
+    .drawio-diagram .mxgraph {
+      max-width: 100%;
+    }
+    .drawio-diagram figcaption {
+      text-align: center;
+      font-style: italic;
+      color: #666;
+      margin-top: 0.5em;
+      font-size: 0.9em;
+    }
+  </style>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Re-trigger draw.io viewer after MkDocs Material finishes DOM rendering
+    document.addEventListener("DOMContentLoaded", function() {
+      if (typeof GraphViewer !== "undefined") {
+        GraphViewer.processElements();
+      }
+    });
+    // Also handle MkDocs Material instant navigation (SPA-style page loads)
+    if (typeof document$ !== "undefined") {
+      document$.subscribe(function() {
+        if (typeof GraphViewer !== "undefined") {
+          GraphViewer.processElements();
+        }
+      });
+    }
+  </script>
+{% endblock %}

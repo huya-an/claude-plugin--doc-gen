@@ -1,0 +1,53 @@
+site_name: Documentation
+docs_dir: docs/md
+site_dir: docs/site
+
+# file:// compatible — generates page.html not page/index.html
+use_directory_urls: false
+
+theme:
+  name: material
+  custom_dir: overrides
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  palette:
+    scheme: default
+    primary: blue
+    accent: blue
+
+plugins:
+  - search
+  - drawio:
+      viewer_js: js/viewer-static.min.js
+      save_drawio_files: true
+      drawio_output_dir: drawio
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mkdocs_drawio_plugin.plugin.mermaid_fence_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
+  - tables
+
+extra_javascript:
+  - js/viewer-static.min.js
+
+extra_css:
+  - css/drawio-overrides.css

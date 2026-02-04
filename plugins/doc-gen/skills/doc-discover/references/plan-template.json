@@ -1,0 +1,86 @@
+{
+  "project_name": "REPLACE_PROJECT_NAME",
+  "language": "REPLACE_LANGUAGE",
+  "framework": "REPLACE_FRAMEWORK",
+  "generated": "REPLACE_DATE",
+  "waves": {
+    "1": ["doc-c4"],
+    "2": ["doc-api", "doc-data", "doc-events"],
+    "3": ["doc-security", "doc-devops", "doc-testing"],
+    "4": ["doc-adr", "doc-quality"]
+  },
+  "sections": [
+    {
+      "id": "doc-c4",
+      "title": "Architecture (C4)",
+      "enabled": false,
+      "wave": 1,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-api",
+      "title": "API Plane",
+      "enabled": false,
+      "wave": 2,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-data",
+      "title": "Data / DBA",
+      "enabled": false,
+      "wave": 2,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-events",
+      "title": "Events & Async",
+      "enabled": false,
+      "wave": 2,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-security",
+      "title": "Security",
+      "enabled": false,
+      "wave": 3,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-devops",
+      "title": "DevOps",
+      "enabled": false,
+      "wave": 3,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-testing",
+      "title": "Testing",
+      "enabled": false,
+      "wave": 3,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-adr",
+      "title": "ADRs",
+      "enabled": false,
+      "wave": 4,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-quality",
+      "title": "Quality",
+      "enabled": false,
+      "wave": 4,
+      "file_count": 0,
+      "output_files": []
+    }
+  ]
+}

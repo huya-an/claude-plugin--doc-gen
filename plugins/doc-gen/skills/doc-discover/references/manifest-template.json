@@ -1,0 +1,41 @@
+{
+  "generated": "REPLACE_DATE",
+  "sections": {
+    "doc-c4": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-api": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-data": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-events": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-security": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-devops": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-testing": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-adr": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-quality": {
+      "files": [],
+      "batch_size": 0
+    }
+  }
+}

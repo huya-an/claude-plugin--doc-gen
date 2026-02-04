@@ -1,0 +1,50 @@
+/* draw.io viewer responsive overrides */
+
+/* Ensure diagram containers are responsive */
+.drawio-diagram {
+  margin: 1.5em 0;
+  width: 100%;
+}
+
+.drawio-diagram .mxgraph {
+  max-width: 100% !important;
+  overflow: auto !important;
+}
+
+/* draw.io viewer toolbar positioning */
+.drawio-diagram .geDiagramContainer {
+  max-width: 100% !important;
+}
+
+/* Ensure SVG inside viewer scales properly */
+.drawio-diagram svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Figure caption styling */
+.drawio-diagram figcaption {
+  text-align: center;
+  font-style: italic;
+  color: var(--md-default-fg-color--light, #666);
+  margin-top: 0.5em;
+  font-size: 0.9em;
+}
+
+/* Download link styling */
+.drawio-download {
+  display: inline-block;
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: var(--md-accent-fg-color, #448aff);
+  text-decoration: none;
+}
+
+.drawio-download:hover {
+  text-decoration: underline;
+}
+
+/* Override draw.io viewer background in Material theme */
+.mxgraph > div {
+  background: transparent !important;
+}
