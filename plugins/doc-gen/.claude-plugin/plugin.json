@@ -1,0 +1,10 @@
+{
+  "name": "documentation-generator",
+  "version": "1.0.0",
+  "description": "Documentation Generator — produces markdown docs with Mermaid diagrams and builds a static HTML site.",
+  "author": {
+    "name": "huya-an"
+  },
+  "repository": "https://github.com/huya-an/claude-plugin--doc-gen",
+  "license": "MIT"
+}
