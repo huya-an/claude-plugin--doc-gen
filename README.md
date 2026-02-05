@@ -22,10 +22,13 @@ Output is a static HTML site with Mermaid diagrams, viewable via `file://` in an
 Install from the Claude Code marketplace (works on all platforms):
 
 ```
-/install huya-an/claude-plugin--doc-gen
+/plugin marketplace add huya-an/claude-plugin--doc-gen
+/plugin install claude-doc-gen
 ```
 
 Then restart Claude Code to load the plugin.
+
+GitHub: https://github.com/huya-an/claude-plugin--doc-gen
 
 ### Manual Installation (alternative)
 
