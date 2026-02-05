@@ -19,6 +19,8 @@ Output is a static HTML site with Mermaid diagrams, viewable via `file://` in an
 
 ## Installation
 
+### macOS / Linux
+
 Clone the repo into your Claude Code plugins directory:
 
 ```bash
@@ -31,6 +33,26 @@ Or clone elsewhere and symlink:
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git
 ln -s "$(pwd)/claude-plugin--doc-gen" ~/.claude/plugins/claude-doc-gen
 ```
+
+### Windows (PowerShell)
+
+Clone the repo into your Claude Code plugins directory:
+
+```powershell
+git clone https://github.com/huya-an/claude-plugin--doc-gen.git "$env:USERPROFILE\.claude\plugins\claude-doc-gen"
+```
+
+Or clone elsewhere and create a symlink (requires **Run as Administrator**):
+
+```powershell
+git clone https://github.com/huya-an/claude-plugin--doc-gen.git
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\plugins\claude-doc-gen" -Target "$PWD\claude-plugin--doc-gen"
+```
+
+> **Note:** On Windows, creating symlinks requires either Administrator privileges or [Developer Mode](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development) enabled. Alternatively, you can use a directory junction which does not require elevated privileges:
+> ```powershell
+> cmd /c mklink /J "$env:USERPROFILE\.claude\plugins\claude-doc-gen" "$PWD\claude-plugin--doc-gen"
+> ```
 
 Then restart Claude Code to load the plugin.
 
@@ -57,7 +79,14 @@ This generates markdown documentation. Finally:
 This builds the static HTML site. Open it:
 
 ```bash
+# macOS
 open docs/site/index.html
+
+# Linux
+xdg-open docs/site/index.html
+
+# Windows (PowerShell)
+Start-Process docs\site\index.html
 ```
 
 ## Commands
@@ -137,8 +166,15 @@ docs/
 If you want to use `/doc-publish` or the publish option in `/doc-all`, set these:
 
 ```bash
+# macOS / Linux
 export SITE_S3_BUCKET="your-bucket-name"    # S3 bucket for hosting
 export SITE_PROFILE="default"               # AWS CLI profile to use
+```
+
+```powershell
+# Windows (PowerShell)
+$env:SITE_S3_BUCKET = "your-bucket-name"    # S3 bucket for hosting
+$env:SITE_PROFILE = "default"               # AWS CLI profile to use
 ```
 
 If not set, you will be prompted to provide them.
