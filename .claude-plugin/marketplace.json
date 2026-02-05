@@ -1,17 +1,30 @@
 {
-  "name": "doc-gen",
-  "version": "1.0.0",
-  "description": "Generates comprehensive documentation for any codebase: architecture (C4), API, ADRs, security, DevOps, data, events, testing, and code quality. Produces markdown with Mermaid diagrams, then converts to a static HTML site with interactive draw.io diagrams.",
-  "repository": "https://github.com/huya-an/claude-plugin--doc-gen",
+  "name": "claude-doc-gen",
   "owner": {
-    "name": "huya-an"
+    "name": "huya-an",
+    "email": ""
+  },
+  "metadata": {
+    "description": "Generates comprehensive documentation for any codebase with C4 architecture diagrams, API docs, ADRs, and more",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "documentation-generator",
-      "source": "./plugins/doc-gen",
-      "description": "Documentation Generator",
-      "version": "1.0.0"
+      "name": "claude-doc-gen",
+      "source": "./",
+      "description": "Analyzes any codebase and generates comprehensive documentation: C4 architecture (all 4 levels), API endpoints with sequence diagrams, ADRs, security analysis, DevOps/CI-CD, data layer with ERDs, event architecture, testing strategy, and code quality. Outputs markdown with Mermaid diagrams, then builds a static HTML site via MkDocs.",
+      "category": "documentation",
+      "tags": [
+        "documentation",
+        "architecture",
+        "c4-model",
+        "api-docs",
+        "mermaid",
+        "mkdocs",
+        "adr",
+        "diagrams"
+      ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -19,9 +19,18 @@ Output is a static HTML site with Mermaid diagrams, viewable via `file://` in an
 
 ## Installation
 
-### macOS / Linux
+Install from the Claude Code marketplace (works on all platforms):
 
-Clone the repo into your Claude Code plugins directory:
+```
+/install huya-an/claude-plugin--doc-gen
+```
+
+Then restart Claude Code to load the plugin.
+
+### Manual Installation (alternative)
+
+<details>
+<summary>macOS / Linux</summary>
 
 ```bash
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git ~/.claude/plugins/claude-doc-gen
@@ -33,28 +42,22 @@ Or clone elsewhere and symlink:
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git
 ln -s "$(pwd)/claude-plugin--doc-gen" ~/.claude/plugins/claude-doc-gen
 ```
+</details>
 
-### Windows (PowerShell)
-
-Clone the repo into your Claude Code plugins directory:
+<details>
+<summary>Windows (PowerShell)</summary>
 
 ```powershell
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git "$env:USERPROFILE\.claude\plugins\claude-doc-gen"
 ```
 
-Or clone elsewhere and create a symlink (requires **Run as Administrator**):
+Or clone elsewhere and create a directory junction (no admin required):
 
 ```powershell
 git clone https://github.com/huya-an/claude-plugin--doc-gen.git
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\plugins\claude-doc-gen" -Target "$PWD\claude-plugin--doc-gen"
+cmd /c mklink /J "$env:USERPROFILE\.claude\plugins\claude-doc-gen" "$PWD\claude-plugin--doc-gen"
 ```
-
-> **Note:** On Windows, creating symlinks requires either Administrator privileges or [Developer Mode](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development) enabled. Alternatively, you can use a directory junction which does not require elevated privileges:
-> ```powershell
-> cmd /c mklink /J "$env:USERPROFILE\.claude\plugins\claude-doc-gen" "$PWD\claude-plugin--doc-gen"
-> ```
-
-Then restart Claude Code to load the plugin.
+</details>
 
 ## Quick Start
 

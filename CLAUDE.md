@@ -4,8 +4,9 @@ This is a Claude Code plugin that generates comprehensive documentation for any 
 
 ## Plugin Structure
 
-- `plugins/doc-gen/skills/` — 14 specialized skills, each handling one documentation domain
-- `plugins/doc-gen/commands/` — 6 user-facing commands (`/doc`, `/doc-generate`, `/doc-site`, `/doc-update`, `/doc-all`, `/doc-publish`)
+- `skills/` — 14 specialized skills, each handling one documentation domain
+- `commands/` — 6 user-facing commands (`/doc`, `/doc-generate`, `/doc-site`, `/doc-update`, `/doc-all`, `/doc-publish`)
+- `.claude-plugin/` — marketplace.json + plugin.json for marketplace registration
 
 ## Architecture
 
