@@ -25,48 +25,95 @@ Use Glob to check for these markers:
 | `Gemfile` | Ruby |
 | `mix.exs` | Elixir |
 | `composer.json` | PHP |
+| `build.zig` | Zig |
 
 Also check for framework-specific markers:
+
+**Java/JVM:**
 - `application.yml` / `application.properties` → Spring Boot
+- `quarkus.properties` / `application.properties` + `io.quarkus` → Quarkus
+
+**JavaScript/TypeScript:**
 - `angular.json` → Angular
 - `next.config.*` → Next.js
 - `nuxt.config.*` → Nuxt.js
+- `vite.config.*` → Vite
+- `remix.config.*` → Remix
+
+**Rust:**
+- Grep `Cargo.toml` for `actix-web` → Actix-web
+- Grep `Cargo.toml` for `axum` → Axum
+- Grep `Cargo.toml` for `rocket` → Rocket
+- Grep `Cargo.toml` for `warp` → Warp
+- Grep `Cargo.toml` for `tokio` → Async runtime (Tokio)
+- Grep `Cargo.toml` for `diesel` or `sqlx` or `sea-orm` → ORM/DB layer
+
+**Python:**
+- Grep `requirements.txt` or `pyproject.toml` for `django` → Django
+- Grep for `fastapi` → FastAPI
+- Grep for `flask` → Flask
+
+**Go:**
+- Grep `go.mod` for `gin-gonic` → Gin
+- Grep for `gorilla/mux` → Gorilla
+- Grep for `echo` → Echo
+
+**Infrastructure:**
 - `serverless.yml` / `serverless.ts` → Serverless Framework
 - `cdk.json` → AWS CDK
 - `terraform/` or `*.tf` → Terraform
+- `pulumi.*` → Pulumi
 
 ### Step 2: Inventory by Category
 
 Use Glob patterns to find files. Grep for key patterns if needed, but DO NOT read file contents.
 
+**Exclude from all searches:** `node_modules/`, `vendor/`, `.git/`, `target/`, `dist/`, `build/`, `docs/`, `claude-doc-gen/`, `__pycache__/`
+
 #### Controllers / Routes → feeds `doc-api`
 ```
 Glob: **/*Controller*, **/*Resource*, **/routes/*, **/router/*, **/*Handler*, **/*Endpoint*
-Grep patterns: @RestController, @RequestMapping, @GetMapping, @PostMapping, app.get(, app.post(, router.get(, @app.route
+Grep patterns:
+  Java: @RestController, @RequestMapping, @GetMapping, @PostMapping, @PutMapping, @DeleteMapping
+  JS/TS: app.get(, app.post(, router.get(, router.post(, @Controller, @Get(, @Post(
+  Python: @app.route, @router.get, @router.post, @api_view
+  Rust: #[get(, #[post(, .route(, .resource(, web::get, web::post, HttpResponse
+  Go: http.HandleFunc, r.HandleFunc, e.GET, e.POST, gin.Context
 ```
 
 #### Services / Business Logic → feeds `doc-c4`
 ```
-Glob: **/*Service*, **/*UseCase*, **/*Interactor*, **/*Manager*, **/*Facade*
+Glob: **/*Service*, **/*UseCase*, **/*Interactor*, **/*Manager*, **/*Facade*, **/*Orchestrator*
+Also: src/main/**/*, src/**/lib.rs, src/**/main.rs (entry points for C4 system boundary)
 ```
 
 #### Entities / Models / Migrations → feeds `doc-data`
 ```
 Glob: **/*Entity*, **/*Model*, **/*Schema*, **/*Migration*, **/*migration*, **/entities/*, **/models/*, **/domain/*
-Grep patterns: @Entity, @Table, @Column, Schema.define, class.*Model, CREATE TABLE
+Grep patterns:
+  Java: @Entity, @Table, @Column, @Id, @ManyToOne, @OneToMany
+  Rust: #[derive(.*Queryable.*)]  , diesel::table!, #[derive(.*FromRow.*)]
+  JS/TS: Schema.define, @Entity(), @Column(), model.define
+  Python: class.*Model, db.Column, models.Model
+  SQL: CREATE TABLE, ALTER TABLE
+Also: **/migrations/*, **/flyway/*, **/alembic/*, **/prisma/schema.prisma
 ```
 
 #### Event Handlers / Async Triggers → feeds `doc-events`
 ```
 Message-driven:
   Glob: **/*Event*, **/*Listener*, **/*Consumer*, **/*Producer*, **/*Publisher*, **/*Subscriber*, **/*Handler*
-  Grep patterns: @EventListener, @KafkaListener, @SqsListener, @RabbitListener, EventEmitter, on(', subscribe(, Redpanda, rdkafka
+  Grep patterns:
+    Java: @EventListener, @KafkaListener, @SqsListener, @RabbitListener
+    Rust: rdkafka, lapin, async-nats, Redpanda
+    JS/TS: EventEmitter, on(', subscribe(, @EventPattern, @MessagePattern
+    Go: sarama, confluent-kafka, amqp
 
 Schedule-driven:
-  Grep patterns: @Scheduled, cron(, schedule(, setInterval, rate(, CloudWatch Events, EventBridge Schedule
+  Grep patterns: @Scheduled, cron(, schedule(, setInterval, rate(, CloudWatch Events, EventBridge
 
 Cloud-event-driven:
-  Grep patterns: S3Event, S3Handler, s3:ObjectCreated, DynamoDBStreamHandler, dynamodb:stream, SNSEvent, SESEvent
+  Grep patterns: S3Event, S3Handler, s3:ObjectCreated, DynamoDBStreamHandler, SNSEvent, SESEvent
 
 Webhook receivers:
   Grep patterns: /webhook, /hook, /callback, hmac, signature, x-hub-signature
@@ -74,45 +121,59 @@ Webhook receivers:
 
 #### Security Configs → feeds `doc-security`
 ```
-Glob: **/*Security*, **/*Auth*, **/*Filter*, **/*Guard*, **/*Middleware*, **/*Permission*, **/*Role*
-Grep patterns: @EnableWebSecurity, SecurityFilterChain, passport, jwt, bcrypt, OAuth, CORS
+Glob: **/*Security*, **/*Auth*, **/*Filter*, **/*Guard*, **/*Middleware*, **/*Permission*, **/*Role*, **/*Policy*
+Grep patterns:
+  Java: @EnableWebSecurity, SecurityFilterChain, OncePerRequestFilter, @PreAuthorize
+  Rust: actix-web-httpauth, jsonwebtoken, argon2, tower-http::cors
+  JS/TS: passport, jwt, bcrypt, OAuth, CORS, helmet
+  Go: middleware, jwt-go, casbin
+  Python: django.contrib.auth, flask-login, fastapi.security
 ```
 
 #### Test Suites → feeds `doc-testing`
 ```
-Glob: **/*Test*, **/*Spec*, **/*test*, **/*spec*, **/__tests__/*, **/test/*
-Also: jest.config*, pytest.ini, .nycrc, karma.conf*, codecov.yml
+Glob: **/*Test*, **/*Spec*, **/*test*, **/*spec*, **/__tests__/*, **/test/*, **/tests/*
+Also: jest.config*, pytest.ini, .nycrc, karma.conf*, codecov.yml, .coveragerc, tarpaulin.toml
+Exclude: node_modules/*, vendor/*
 ```
 
 #### CI/CD + Docker + IaC → feeds `doc-devops`
 ```
 Glob: Dockerfile*, docker-compose*, .github/workflows/*, .gitlab-ci.yml, Jenkinsfile, .circleci/*, buildspec.yml
 Glob: **/terraform/*, **/cdk/*, **/cloudformation/*, **/ansible/*, **/helm/*
-Glob: k8s/*, kubernetes/*, *.tf
+Glob: k8s/*, kubernetes/*, *.tf, azure-pipelines.yml, .azure-pipelines/*
+Glob: task-definition*.json, appspec.yml, ecs-params.yml
 ```
 
 #### ADR Documents → feeds `doc-adr`
 ```
-Glob: **/adr/*, **/decisions/*, **/ADR*, **/*adr*
+Glob: **/adr/*, **/decisions/*, **/ADR*, **/*adr*, **/doc/architecture/*
 Grep: "## Status", "## Decision", "## Context" (in markdown files)
 ```
 
+**Note:** `doc-adr` should almost always be enabled, even when zero ADR files are found. The agent infers architectural decisions from prior wave output (tech stack choices, data store selections, architecture patterns). Only skip if the project is trivially small (e.g., a single-file utility).
+
 #### Quality / Config → feeds `doc-quality`
 ```
-Glob: .eslintrc*, .prettierrc*, sonar-project.properties, .editorconfig, tslint.json, .rubocop.yml
-Glob: pom.xml, build.gradle*, package.json (for dependency analysis)
+Glob: .eslintrc*, .prettierrc*, sonar-project.properties, .editorconfig, tslint.json, .rubocop.yml, rustfmt.toml, clippy.toml
+Glob: pom.xml, build.gradle*, package.json, Cargo.toml (for dependency analysis)
 ```
 
 ### Step 3: Build File Manifest
 
-Create a mapping of which source files each documentation agent needs to read. Group files so no single agent gets more than ~30 files. If a category has too many files, split into sub-batches.
+Create a mapping of which source files each documentation agent needs to read. Group files so no single agent gets more than ~30 files. If a category has too many files, prioritize:
+1. Entry points and configuration files first
+2. Core domain files (most-imported, most-referenced)
+3. Drop utility/helper files if over the limit
+
+Files can appear in at most 2-3 sections — a Service file might feed both doc-c4 and doc-api, but not every section.
 
 ### Step 4: Build Documentation Plan
 
 Create a plan with sections to generate. Each section has:
 - `id`: skill name (e.g., "doc-c4", "doc-api")
 - `title`: human-readable title
-- `enabled`: boolean (true if relevant files found)
+- `enabled`: boolean (true if relevant files found, or always true for doc-adr)
 - `wave`: execution wave (1-4) — determines when this section runs
 - `file_count`: number of source files to analyze
 - `output_files`: list of markdown files to generate
@@ -126,7 +187,7 @@ Create a plan with sections to generate. Each section has:
 | 3 | `doc-security`, `doc-devops`, `doc-testing` | Cross-cutting analysis. Reads Wave 1-2 markdown for context. |
 | 4 | `doc-adr`, `doc-quality` | Assessment and synthesis. Reads all prior wave output. |
 
-Skip sections that have zero relevant files.
+Skip sections that have zero relevant files (except `doc-adr` — see note above).
 
 ### Step 5: Present Plan to User
 
@@ -145,7 +206,7 @@ Detected: {language} / {framework}
 | 3 | Security | 8 | 3 | Enabled |
 | 3 | DevOps | 12 | 3 | Enabled |
 | 3 | Testing | 34 | 2 | Enabled |
-| 4 | ADRs | 5 | 6 | Enabled |
+| 4 | ADRs | 5 | 8-12 | Enabled (inferred from code) |
 | 4 | Quality | 6 | 2 | Enabled |
 
 Total: ~8 sections, ~38 pages (4 execution waves)
@@ -199,9 +260,10 @@ If you can't find the script, use Glob: `**/doc-discover/references/validate-pla
 1. **Never read full source files** — only use Glob for file discovery and Grep for pattern matching
 2. **Be conservative with estimates** — it's better to include a section and find nothing than to skip it
 3. **Respect user choices** — if they disable a section, mark it `enabled: false`
-4. **Handle monorepos** — if multiple projects detected, ask user which to document
+4. **Handle monorepos** — if multiple projects detected (multiple pom.xml, Cargo.toml at different paths), ask user which to document
 5. **Files should appear in at most 2-3 sections** — a Service file might feed both doc-c4 and doc-api, but not every section
 6. **The plan JSON MUST include `"wave"` on every section and a top-level `"waves"` object** — downstream commands depend on these exact field names
+7. **Always enable doc-adr** unless the project is trivially small — it infers decisions from prior wave output even when no ADR files exist
 
 ## Tools
 - Glob

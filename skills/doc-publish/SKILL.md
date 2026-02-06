@@ -1,7 +1,7 @@
 # doc-publish
 
 ## Description
-Publishes the generated documentation site to an S3 bucket using the AWS CLI.
+Publishes the generated documentation site to an S3 bucket using the AWS CLI. Supports optional CloudFront cache invalidation for CDN-hosted sites.
 
 ## Context
 fork
@@ -12,12 +12,13 @@ You are the **Publish Agent**. You upload the generated static documentation sit
 
 ### Environment Variables
 
-This skill requires two environment variables:
+This skill requires two environment variables (and one optional):
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SITE_S3_BUCKET` | S3 bucket name for hosting | `my-docs-bucket` |
-| `SITE_PROFILE` | AWS CLI profile to use | `default` or `prod` |
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `SITE_S3_BUCKET` | Yes | S3 bucket name for hosting | `my-docs-bucket` |
+| `SITE_PROFILE` | Yes | AWS CLI profile to use | `default` or `prod` |
+| `SITE_CF_DISTRIBUTION` | No | CloudFront distribution ID for cache invalidation | `E1ABCDEF123456` |
 
 ### Step 1: Verify Prerequisites
 
@@ -29,6 +30,7 @@ Run:
 ```bash
 echo "SITE_S3_BUCKET=$SITE_S3_BUCKET"
 echo "SITE_PROFILE=$SITE_PROFILE"
+echo "SITE_CF_DISTRIBUTION=$SITE_CF_DISTRIBUTION"
 ```
 
 If `SITE_S3_BUCKET` is empty or not set, use AskUserQuestion:
@@ -96,6 +98,7 @@ Profile: $SITE_PROFILE
 Target: s3://$SITE_S3_BUCKET/{directory-name}/
 Files: {count}
 Size: {size}
+CloudFront: {distribution_id or "not configured"}
 ```
 
 Use AskUserQuestion to confirm upload.
@@ -128,9 +131,34 @@ aws s3 cp s3://$SITE_S3_BUCKET/{directory-name}/ s3://$SITE_S3_BUCKET/{directory
   --recursive --exclude "*" --include "*.js" \
   --content-type "application/javascript" --metadata-directive REPLACE \
   --profile $SITE_PROFILE --quiet
+
+# JSON files (search index)
+aws s3 cp s3://$SITE_S3_BUCKET/{directory-name}/ s3://$SITE_S3_BUCKET/{directory-name}/ \
+  --recursive --exclude "*" --include "*.json" \
+  --content-type "application/json" --metadata-directive REPLACE \
+  --profile $SITE_PROFILE --quiet
 ```
 
-### Step 5: Generate Summary
+### Step 5: CloudFront Cache Invalidation (Optional)
+
+If `SITE_CF_DISTRIBUTION` is set and non-empty:
+
+```bash
+aws cloudfront create-invalidation \
+  --distribution-id $SITE_CF_DISTRIBUTION \
+  --paths "/{directory-name}/*" \
+  --profile $SITE_PROFILE
+```
+
+Display the invalidation ID so the user can track it:
+```
+CloudFront invalidation created: {invalidation_id}
+Note: Invalidation typically completes within 5-10 minutes.
+```
+
+If `SITE_CF_DISTRIBUTION` is not set, skip this step silently.
+
+### Step 6: Generate Summary
 
 After successful upload, display the summary table and final URL.
 
@@ -138,22 +166,22 @@ After successful upload, display the summary table and final URL.
 Documentation Published Successfully
 ======================================
 
-{summary table with sections, file counts, output pages, status}
+| Section | Files Analyzed | Output Pages | Status |
+|---------|---------------|-------------|--------|
+| Architecture (C4) | {n} | {n} | Published |
+| API Plane | {n} | {n} | Published |
+| Data / DBA | {n} | {n} | Published |
+| ... | | | |
+
+Total: {n} HTML pages uploaded to S3
 
 Published to: https://$SITE_S3_BUCKET.s3.amazonaws.com/{directory-name}/index.html
 
 Or if S3 static website hosting is enabled:
   http://$SITE_S3_BUCKET.s3-website-{region}.amazonaws.com/{directory-name}/
-```
 
-The summary table should use box-drawing characters:
-```
-┌─────┬───────────────────┬──────────────────┬──────────────┬─────────────────────────────────┐
-│  #  │      Section      │ Files to Analyze │ Output Pages │             Status              │
-├─────┼───────────────────┼──────────────────┼──────────────┼─────────────────────────────────┤
-│ 1   │ Architecture (C4) │ {n}              │ {n}          │ Enabled                         │
-...
-└─────┴───────────────────┴──────────────────┴──────────────┴─────────────────────────────────┘
+Or if CloudFront is configured:
+  https://{cloudfront-domain}/{directory-name}/
 ```
 
 ### Error Handling
@@ -161,6 +189,7 @@ The summary table should use box-drawing characters:
 - If AWS CLI is not installed: "AWS CLI not found. Install it: https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html"
 - If credentials not configured: "AWS credentials not configured for profile '$SITE_PROFILE'. Run: aws configure --profile $SITE_PROFILE"
 - If S3 upload fails (permission denied): "Upload failed. Verify you have s3:PutObject permission on bucket $SITE_S3_BUCKET"
+- If CloudFront invalidation fails: "CloudFront invalidation failed. Verify you have cloudfront:CreateInvalidation permission. The S3 upload was successful — the site is updated but CDN cache may be stale."
 - If site directory is empty: "No site found. Run /doc-site first."
 - If environment variables missing: Prompt user via AskUserQuestion
 
@@ -173,4 +202,5 @@ The summary table should use box-drawing characters:
 
 ## Output
 - Site uploaded to S3
+- CloudFront cache invalidated (if configured)
 - Summary table displayed with final URL
