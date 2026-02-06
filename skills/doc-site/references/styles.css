@@ -570,49 +570,190 @@ tbody tr:hover {
 }
 
 /* -------------------------------------------------------------
-   11. Draw.io / mxGraph Diagram Container
+   11. Mermaid Diagram Container + Fullscreen Modal
    ------------------------------------------------------------- */
-.diagram-container {
-  width: 100%;
-  margin: 2em 0;
+
+/* Base diagram container — Mermaid.js renders SVGs into .mermaid elements */
+.mermaid {
+  text-align: center;
+  margin: 1.5em 0;
+  position: relative;
+  overflow: auto;
+  min-height: 200px;
 }
 
-.diagram-container .mxgraph {
-  width: 100%;
-}
-
-.mxgraph,
-.mxgraph-wrapper {
-  margin: 2em 0;
-  padding: 1.25rem;
+/* Enhanced state (after diagram-viewer.js processes the element) */
+.mermaid.diagram-enhanced {
+  cursor: pointer;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  padding: 1rem;
   background-color: var(--color-bg-secondary);
-  overflow-x: auto;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
+  transition: box-shadow var(--transition-fast);
 }
 
-/* Force the draw.io viewer's generated container and SVG to fill width.
-   The viewer sets inline width/height on .geDiagramContainer; we must
-   override with !important to make diagrams responsive. */
-.mxgraph .geDiagramContainer,
-.mxgraph-wrapper .geDiagramContainer {
-  width: 100% !important;
-  overflow: visible !important;
+.mermaid.diagram-enhanced:hover {
+  box-shadow: var(--shadow-md);
 }
 
-.mxgraph svg,
-.mxgraph-wrapper svg {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.mxgraph img,
-.mxgraph-wrapper img {
+/* SVG sizing inside diagrams */
+.mermaid svg {
   max-width: 100%;
   height: auto;
+}
+
+/* Expand button overlay (top-right) */
+.diagram-expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  color: var(--color-text-secondary);
+  padding: 0;
+  line-height: 1;
+}
+
+.mermaid.diagram-enhanced:hover .diagram-expand-btn {
+  opacity: 1;
+}
+
+.diagram-expand-btn:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+/* "Click to expand" hint */
+.mermaid.diagram-enhanced::after {
+  content: "Click to expand";
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+
+.mermaid.diagram-enhanced:hover::after {
+  opacity: 1;
+}
+
+/* ── Fullscreen modal ── */
+.diagram-modal {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-overlay) + 100);
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.diagram-modal.active {
+  opacity: 1;
+}
+
+.diagram-modal-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.diagram-modal-content.panning {
+  cursor: grabbing;
+}
+
+.diagram-modal-content svg {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+  transform-origin: 0 0;
+}
+
+/* Controls toolbar */
+.diagram-modal-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: calc(var(--z-overlay) + 101);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.diagram-modal-btn {
+  height: 36px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text);
+  font-weight: 600;
+  transition: background var(--transition-fast);
+  padding: 0 8px;
+  user-select: none;
+}
+
+.diagram-modal-btn:hover {
+  background: #fff;
+}
+
+.diagram-modal-btn[data-action="reset"] {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  padding: 0 14px;
+}
+
+.diagram-modal-btn[data-action="close"] {
+  margin-left: 8px;
+  font-size: 22px;
+}
+
+.diagram-modal-zoom-level {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin-right: 4px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.diagram-modal-hint {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-size-xs);
+  z-index: calc(var(--z-overlay) + 101);
+  pointer-events: none;
 }
 
 /* Optional caption under a diagram */
