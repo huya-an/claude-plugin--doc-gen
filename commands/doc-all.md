@@ -99,6 +99,88 @@ Wave 3 (read whichever exist): docs/md/security-overview.md, docs/md/devops-over
 
 Wait for all Wave 4 agents. Report each status.
 
+#### Generate Index Page with Codebase Grade
+
+After all 4 waves complete, create `docs/md/index.md` — the documentation home page. **The codebase grade MUST be the very first content after the title.** It comes before section links.
+
+Read these overview files (whichever exist) to synthesize grades:
+- `docs/md/arch-overview.md` — architecture quality
+- `docs/md/testing-overview.md` — testing maturity
+- `docs/md/security-overview.md` — security posture
+- `docs/md/devops-overview.md` — CI/CD and infrastructure
+- `docs/md/quality-overview.md` — code quality and dependency health
+- `docs/md/data-overview.md` — data layer design
+- `docs/md/events-overview.md` — event architecture
+- `docs/md/api-index.md` — API design
+
+Also read `docs/.doc-plan.json` for the project name, language, and framework.
+
+Write `docs/md/index.md` with this exact structure:
+
+```markdown
+---
+title: "Home"
+section: "Home"
+order: 0
+generated: "YYYY-MM-DD"
+---
+
+# {project_name} Documentation
+
+Auto-generated technical documentation for the {project_name} project.
+
+## Codebase Quality Grade: {OVERALL_GRADE}
+
+### Overall Assessment
+
+{1-2 paragraph synthesis of the codebase's overall quality based on all overview files. Be specific — reference actual patterns, tools, and metrics found in the generated documentation.}
+
+### Scorecard
+
+| Dimension | Grade | Rationale |
+|---|---|---|
+| **Architecture** | {grade} | {1-2 sentences based on arch-overview.md findings} |
+| **Testing** | {grade} | {1-2 sentences based on testing-overview.md findings} |
+| **Security** | {grade} | {1-2 sentences based on security-overview.md findings} |
+| **CI/CD & DevOps** | {grade} | {1-2 sentences based on devops-overview.md findings} |
+| **Code Quality** | {grade} | {1-2 sentences based on quality-overview.md findings} |
+| **Dependency Health** | {grade} | {1-2 sentences based on quality-overview.md dependency analysis} |
+| **Maintainability** | {grade} | {1-2 sentences — cross-domain synthesis} |
+
+### Strengths
+
+- {bullet points — specific, evidence-based strengths found across all domains}
+
+### Areas for Improvement
+
+1. {numbered list — specific, actionable improvements with file/metric references}
+
+---
+
+## Sections
+
+### {Section Name}
+
+{Brief description}
+
+- [Page Title](page-file.md)
+- ...
+
+{repeat for each enabled section from the plan, grouped by domain}
+
+---
+
+*Generated on YYYY-MM-DD*
+```
+
+**Grading rules:**
+- Use letter grades: A, A-, B+, B, B-, C+, C, C-, D, F
+- The **overall grade** is a weighted synthesis, not a simple average. Architecture and Security weigh more heavily than Maintainability.
+- Only include scorecard rows for dimensions that have corresponding generated documentation. If a domain was skipped (e.g., no events found), omit that row.
+- Every grade must have a rationale grounded in evidence from the overview files. Never assign a grade without justification.
+- Strengths and areas for improvement must reference specific findings — tool names, file counts, patterns, metrics, version numbers.
+- Keep the overall assessment to 1-2 paragraphs max.
+
 #### Markdown Validation
 
 Read `{SKILLS_DIR}/doc-validate-md/SKILL.md`, spawn Task agent, display results.
@@ -109,7 +191,7 @@ Read `{SKILLS_DIR}/doc-validate-md/SKILL.md`, spawn Task agent, display results.
 
 1. Verify `mkdocs.yml` exists and mkdocs is installed (`which mkdocs`)
 2. Read frontmatter from all markdown files, generate `nav:` section for `mkdocs.yml`
-3. Create `docs/md/index.md` if missing (project name, section links, generation date)
+3. Verify `docs/md/index.md` exists (should have been created with the codebase grade in the previous step). If missing, create it using the grade structure above.
 4. Run `mkdocs build`
 5. Verify output:
    - Count HTML pages

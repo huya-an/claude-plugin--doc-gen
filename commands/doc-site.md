@@ -71,11 +71,20 @@ Update the `nav:` section in `mkdocs.yml`. Preserve other settings (theme, plugi
 
 ### Step 4: Create Index Page
 
-If `docs/md/index.md` does not exist, create it:
-- Project name from `.doc-plan.json`
-- Brief description
-- Links to each section's overview page
-- Generation date
+If `docs/md/index.md` already exists (created by `/doc-generate` with codebase grade), keep it as-is.
+
+If `docs/md/index.md` does NOT exist, create it with the full grade structure. Read all overview files from `docs/md/` (whichever exist: `arch-overview.md`, `testing-overview.md`, `security-overview.md`, `devops-overview.md`, `quality-overview.md`, `data-overview.md`, `events-overview.md`, `api-index.md`) and `docs/.doc-plan.json` for project metadata. Write `docs/md/index.md` with this structure:
+
+1. Frontmatter: title "Home", section "Home", order 0, generated date
+2. `# {project_name} Documentation` — project title
+3. `## Codebase Quality Grade: {OVERALL_GRADE}` — **this MUST come first, before section links**
+4. `### Overall Assessment` — 1-2 paragraph synthesis
+5. `### Scorecard` — table with columns: Dimension | Grade | Rationale. One row per documented domain (Architecture, Testing, Security, CI/CD & DevOps, Code Quality, Dependency Health, Maintainability). Use letter grades (A through F, with +/-). The overall grade is a weighted synthesis — Architecture and Security weigh more. Only include rows for domains that have generated documentation. Every grade needs evidence-based rationale.
+6. `### Strengths` — bullet list of specific, evidence-based strengths
+7. `### Areas for Improvement` — numbered list of specific, actionable improvements
+8. `---`
+9. `## Sections` — links to each section's pages, grouped by domain
+10. Generation date
 
 ### Step 5: Run MkDocs Build
 
