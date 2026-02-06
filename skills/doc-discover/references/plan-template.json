@@ -5,9 +5,11 @@
   "generated": "REPLACE_DATE",
   "waves": {
     "1": ["doc-c4"],
-    "2": ["doc-api", "doc-data", "doc-events"],
-    "3": ["doc-security", "doc-devops", "doc-testing"],
-    "4": ["doc-adr", "doc-quality"]
+    "2": ["doc-api", "doc-data-discover", "doc-events"],
+    "3": ["doc-data-tables"],
+    "4": ["doc-data-queries"],
+    "5": ["doc-security", "doc-devops", "doc-testing", "doc-data-overview"],
+    "6": ["doc-adr", "doc-quality"]
   },
   "sections": [
     {
@@ -27,8 +29,8 @@
       "output_files": []
     },
     {
-      "id": "doc-data",
-      "title": "Data / DBA",
+      "id": "doc-data-discover",
+      "title": "Data Discovery",
       "enabled": false,
       "wave": 2,
       "file_count": 0,
@@ -43,10 +45,26 @@
       "output_files": []
     },
     {
+      "id": "doc-data-tables",
+      "title": "Data Tables",
+      "enabled": false,
+      "wave": 3,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-data-queries",
+      "title": "Data Queries",
+      "enabled": false,
+      "wave": 4,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
       "id": "doc-security",
       "title": "Security",
       "enabled": false,
-      "wave": 3,
+      "wave": 5,
       "file_count": 0,
       "output_files": []
     },
@@ -54,7 +72,7 @@
       "id": "doc-devops",
       "title": "DevOps",
       "enabled": false,
-      "wave": 3,
+      "wave": 5,
       "file_count": 0,
       "output_files": []
     },
@@ -62,7 +80,15 @@
       "id": "doc-testing",
       "title": "Testing",
       "enabled": false,
-      "wave": 3,
+      "wave": 5,
+      "file_count": 0,
+      "output_files": []
+    },
+    {
+      "id": "doc-data-overview",
+      "title": "Data Overviews",
+      "enabled": false,
+      "wave": 5,
       "file_count": 0,
       "output_files": []
     },
@@ -70,7 +96,7 @@
       "id": "doc-adr",
       "title": "ADRs",
       "enabled": false,
-      "wave": 4,
+      "wave": 6,
       "file_count": 0,
       "output_files": []
     },
@@ -78,7 +104,7 @@
       "id": "doc-quality",
       "title": "Quality",
       "enabled": false,
-      "wave": 4,
+      "wave": 6,
       "file_count": 0,
       "output_files": []
     }

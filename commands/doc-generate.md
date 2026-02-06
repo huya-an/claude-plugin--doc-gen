@@ -6,15 +6,15 @@ Generate markdown documentation for all approved sections using forked agents in
 
 You are running the `/doc-generate` command — Phase 1 of documentation generation.
 
-**This command spawns forked agents in 4 sequential waves. Each wave waits for the previous wave to fully complete before starting. Domains within a wave run in parallel.**
+**This command spawns forked agents in 6 sequential waves. Each wave waits for the previous wave to fully complete before starting. Domains within a wave run in parallel.**
 
 ### Prerequisites
 
 Read `docs/.doc-plan.json` and `docs/.doc-manifest.json`. If either file doesn't exist, tell the user to run `/doc` first and stop.
 
 Validate the plan has a `waves` object. If missing, **fix it yourself** — do NOT tell the user to re-run `/doc`. Instead:
-1. Add the `"waves"` object: `{"1":["doc-c4"],"2":["doc-api","doc-data","doc-events"],"3":["doc-security","doc-devops","doc-testing"],"4":["doc-adr","doc-quality"]}` (only include enabled section IDs)
-2. If sections have `"priority"` instead of `"wave"`, rename the field and set: doc-c4→1, doc-api/doc-data/doc-events→2, doc-security/doc-devops/doc-testing→3, doc-adr/doc-quality→4
+1. Add the `"waves"` object using the wave assignments from Step 1 below (only include enabled section IDs)
+2. If sections have `"priority"` instead of `"wave"`, rename the field and set the correct wave number
 3. Write the fixed plan back to `docs/.doc-plan.json`
 
 ### Step 1: Display Plan
@@ -26,21 +26,28 @@ Documentation Generation Plan
 ==============================
 
 Wave 1 (Foundation):
-  - doc-c4: Architecture (C4) — 45 files → 6 pages
+  - doc-c4: Architecture (C4) — {n} files → {n} pages
 
-Wave 2 (Horizontal Concerns):
-  - doc-api: API Plane — 23 files → 12 pages
-  - doc-data: Data / DBA — 15 files → 3 pages
-  - doc-events: Events & Async — 8 files → 3 pages
+Wave 2 (Horizontal):
+  - doc-api: API Plane — {n} files → {n} pages
+  - doc-data-discover: Data Discovery — {n} files → manifest
+  - doc-events: Events & Async — {n} files → {n} pages
 
-Wave 3 (Cross-Cutting):
-  - doc-security: Security — 8 files → 3 pages
-  - doc-devops: DevOps — 12 files → 3 pages
-  - doc-testing: Testing — 34 files → 2 pages
+Wave 3 (Data Tables):
+  - doc-data-tables: Data Tables — reads manifest → 1 page per table
 
-Wave 4 (Assessment):
-  - doc-adr: ADRs — 5 files → 6 pages
-  - doc-quality: Quality — 6 files → 2 pages
+Wave 4 (Data Queries):
+  - doc-data-queries: Data Queries — reads manifest → 1 page per query
+
+Wave 5 (Cross-Cutting):
+  - doc-security: Security — {n} files → {n} pages
+  - doc-devops: DevOps — {n} files → {n} pages
+  - doc-testing: Testing — {n} files → {n} pages
+  - doc-data-overview: Data Overviews — reads table/query pages → rollup pages
+
+Wave 6 (Assessment):
+  - doc-adr: ADRs — {n} files → {n} pages
+  - doc-quality: Quality — {n} files → {n} pages
 
 Starting generation...
 ```
@@ -66,33 +73,11 @@ Extract the base path (everything before `doc-c4/SKILL.md`) — this is `SKILLS_
 
 ### Step 4: Execute Waves
 
-Execute waves sequentially: Wave 1 → Wave 2 → Wave 3 → Wave 4. Within each wave, spawn all enabled sections in parallel (up to 3 concurrent agents).
+Execute waves sequentially: Wave 1 → Wave 2 → Wave 3 → Wave 4 → Wave 5 → Wave 6. Within each wave, spawn all enabled sections in parallel (up to 3 concurrent agents).
 
-**CRITICAL: Each wave MUST fully complete before the next wave starts.** Later waves depend on earlier wave markdown output for context compression.
+**CRITICAL: Each wave MUST fully complete before the next wave starts.** Later waves depend on earlier wave output.
 
-#### Wave 1: C4 Architecture
-
-Read `{SKILLS_DIR}/doc-c4/SKILL.md` and spawn a single Task agent:
-
-```
-You are a documentation agent generating C4 architecture documentation.
-
-CONTEXT:
-- Read docs/.doc-plan.json and docs/.doc-manifest.json to find your assigned files
-- Write all output markdown to docs/md/
-- If your instructions reference files in a "references/" directory, read them from: {SKILLS_DIR}/doc-c4/references/
-- Read source files in batches of 5-8 at a time to stay within context limits
-- Keep output concise. Do not generate placeholder or stub content.
-
-INSTRUCTIONS:
-{contents of doc-c4/SKILL.md}
-```
-
-Wait for the C4 agent to complete before proceeding. Report its status.
-
-#### Wave 2: API, Data, Events (parallel)
-
-For each enabled section in Wave 2, read `{SKILLS_DIR}/{section_id}/SKILL.md` and spawn Task agents **in parallel**:
+For each wave, read the SKILL.md for every enabled section in that wave and spawn Task agents with this template:
 
 ```
 You are a documentation agent generating {section_title} documentation.
@@ -101,88 +86,87 @@ CONTEXT:
 - Read docs/.doc-plan.json and docs/.doc-manifest.json to find your assigned files
 - Write all output markdown to docs/md/
 - If your instructions reference files in a "references/" directory, read them from: {SKILLS_DIR}/{section_id}/references/
+- If your instructions reference shared references (e.g., ../references/), read them from: {SKILLS_DIR}/references/
 - Read source files in batches of 5-8 at a time to stay within context limits
 - Keep output concise. Do not generate placeholder or stub content.
 
-PRIOR WAVE CONTEXT (read these for system context, do not regenerate them):
-- docs/md/arch-overview.md — system overview from C4 analysis
-- docs/md/arch-c4-level1.md — system context diagram
-- docs/md/arch-c4-level2.md — container diagram
-Reading these gives you the system map established in Wave 1. Reference it for component names, boundaries, and relationships.
+{PRIOR_WAVE_CONTEXT}
 
 INSTRUCTIONS:
 {contents of SKILL.md}
 ```
 
-Wait for all Wave 2 agents to complete. Report each agent's status.
+Use `subagent_type: "general-purpose"` for all spawned agents.
 
-#### Wave 3: Security, DevOps, Testing (parallel)
+#### Prior Wave Context by Wave
 
-For each enabled section in Wave 3, read `{SKILLS_DIR}/{section_id}/SKILL.md` and spawn Task agents **in parallel**:
+**Wave 1** — No prior context. Omit the PRIOR_WAVE_CONTEXT block.
 
+**Wave 2** — C4 architecture establishes the system map:
 ```
-You are a documentation agent generating {section_title} documentation.
+PRIOR WAVE CONTEXT (read these for system context, do not regenerate them):
+- docs/md/arch-overview.md — system overview from C4 analysis
+- docs/md/arch-c4-level1.md — system context diagram
+- docs/md/arch-c4-level2.md — container diagram
+Reading these gives you the system map established in Wave 1. Reference it for component names, boundaries, and relationships.
+```
 
-CONTEXT:
-- Read docs/.doc-plan.json and docs/.doc-manifest.json to find your assigned files
-- Write all output markdown to docs/md/
-- If your instructions reference files in a "references/" directory, read them from: {SKILLS_DIR}/{section_id}/references/
-- Read source files in batches of 5-8 at a time to stay within context limits
-- Keep output concise. Do not generate placeholder or stub content.
+**Wave 3** — Data manifest is now available from Wave 2:
+```
+PRIOR WAVE CONTEXT (read these for system context, do not regenerate them):
+- docs/md/arch-overview.md — system overview
+- docs/md/arch-c4-level2.md — container diagram
+- docs/.data-manifest.json — data inventory from doc-data-discover (your primary input)
+```
 
+**Wave 4** — Table pages are now available from Wave 3:
+```
+PRIOR WAVE CONTEXT (read these for system context, do not regenerate them):
+- docs/md/arch-overview.md — system overview
+- docs/md/arch-c4-level2.md — container diagram
+- docs/.data-manifest.json — data inventory from doc-data-discover (your primary input)
+- docs/md/data--*--tables--*.md — table pages from doc-data-tables (for cross-referencing)
+- docs/md/api-index.md — API endpoint summary (for query-to-API cross-references)
+```
+
+**Wave 5** — All domain content is available for cross-cutting analysis:
+```
 PRIOR WAVE CONTEXT (read these for cross-domain context, do not regenerate them):
 Wave 1 output:
 - docs/md/arch-overview.md — system overview
 - docs/md/arch-c4-level2.md — container diagram (component names and boundaries)
 Wave 2 output (read whichever exist):
 - docs/md/api-index.md — API endpoint summary
-- docs/md/data-overview.md — data store summary
+- docs/.data-manifest.json — data inventory
 - docs/md/events-overview.md — async trigger summary
-These give you the full system picture from Waves 1-2. Reference component names, endpoints, data stores, and event flows as established in prior waves.
-
-INSTRUCTIONS:
-{contents of SKILL.md}
+Wave 3-4 output (read whichever exist):
+- docs/md/data--*--tables--*.md — all table pages (for doc-data-overview rollup)
+- docs/md/data--*--queries--*.md — all query pages (for doc-data-overview rollup)
+These give you the full system picture from Waves 1-4. Reference component names, endpoints, data stores, and event flows as established in prior waves.
 ```
 
-Wait for all Wave 3 agents to complete. Report each agent's status.
-
-#### Wave 4: ADR, Quality (parallel)
-
-For each enabled section in Wave 4, read `{SKILLS_DIR}/{section_id}/SKILL.md` and spawn Task agents **in parallel**:
-
+**Wave 6** — Everything is available for synthesis:
 ```
-You are a documentation agent generating {section_title} documentation.
-
-CONTEXT:
-- Read docs/.doc-plan.json and docs/.doc-manifest.json to find your assigned files
-- Write all output markdown to docs/md/
-- If your instructions reference files in a "references/" directory, read them from: {SKILLS_DIR}/{section_id}/references/
-- Read source files in batches of 5-8 at a time to stay within context limits
-- Keep output concise. Do not generate placeholder or stub content.
-
 PRIOR WAVE CONTEXT (read these for full system context, do not regenerate them):
 Wave 1 output:
 - docs/md/arch-overview.md — system overview and design principles
 - docs/md/arch-c4-level2.md — container diagram
 Wave 2 output (read whichever exist):
 - docs/md/api-index.md — API endpoint summary
-- docs/md/data-overview.md — data store summary
+- docs/md/data--overview.md — data layer summary
 - docs/md/events-overview.md — async trigger summary
-Wave 3 output (read whichever exist):
+Wave 5 output (read whichever exist):
 - docs/md/security-overview.md — security posture summary
 - docs/md/devops-overview.md — deployment and infrastructure summary
 - docs/md/testing-overview.md — testing strategy and coverage summary
 These give you the complete system picture from all prior waves. Use this for synthesis and cross-domain analysis.
-
-INSTRUCTIONS:
-{contents of SKILL.md}
 ```
 
-Wait for all Wave 4 agents to complete. Report each agent's status.
+Report progress after each wave completes so the user can monitor execution.
 
 ### Step 5: Generate Index Page with Codebase Grade
 
-After all 4 waves complete, create `docs/md/index.md` — the documentation home page. **The codebase grade MUST be the very first content after the title.** It comes before section links.
+After all 6 waves complete, create `docs/md/index.md` — the documentation home page. **The codebase grade MUST be the very first content after the title.** It comes before section links.
 
 Read these overview files (whichever exist) to synthesize grades:
 - `docs/md/arch-overview.md` — architecture quality
@@ -190,7 +174,7 @@ Read these overview files (whichever exist) to synthesize grades:
 - `docs/md/security-overview.md` — security posture
 - `docs/md/devops-overview.md` — CI/CD and infrastructure
 - `docs/md/quality-overview.md` — code quality and dependency health
-- `docs/md/data-overview.md` — data layer design
+- `docs/md/data--overview.md` — data layer design
 - `docs/md/events-overview.md` — event architecture
 - `docs/md/api-index.md` — API design
 
@@ -278,9 +262,11 @@ Markdown Generation Complete
 ==============================
 
 Wave 1 (C4 Architecture): ✓ {n} files
-Wave 2 (API / Data / Events): ✓ {n} files
-Wave 3 (Security / DevOps / Testing): ✓ {n} files
-Wave 4 (ADR / Quality): ✓ {n} files
+Wave 2 (API / Data Discovery / Events): ✓ {n} files
+Wave 3 (Data Tables): ✓ {n} files
+Wave 4 (Data Queries): ✓ {n} files
+Wave 5 (Security / DevOps / Testing / Data Overviews): ✓ {n} files
+Wave 6 (ADR / Quality): ✓ {n} files
 Index (Codebase Grade): ✓ index.md
 
 Total: {total} markdown files in docs/md/

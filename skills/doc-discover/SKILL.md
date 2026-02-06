@@ -87,7 +87,7 @@ Glob: **/*Service*, **/*UseCase*, **/*Interactor*, **/*Manager*, **/*Facade*, **
 Also: src/main/**/*, src/**/lib.rs, src/**/main.rs (entry points for C4 system boundary)
 ```
 
-#### Entities / Models / Migrations / Repositories / Data Clients → feeds `doc-data`
+#### Entities / Models / Migrations / Repositories / Data Clients → feeds `doc-data-discover`
 ```
 Entities and Models:
   Glob: **/*Entity*, **/*Model*, **/*Schema*, **/*Migration*, **/*migration*, **/entities/*, **/models/*, **/domain/*
@@ -133,7 +133,13 @@ Stored Procedures:
     SQL: CREATE FUNCTION, CREATE PROCEDURE, CREATE OR REPLACE FUNCTION
 ```
 
-**Note on file count:** `doc-data` will generate many more output pages than other skills (one per table + one per query). When building the manifest, include ALL repository and data client files — the agent needs them to discover every query method. Increase the file limit for `doc-data` to ~50 files if needed.
+**Note on data sub-skills:** Data documentation is split into 4 focused sub-skills that run in separate waves:
+- `doc-data-discover` (Wave 2) — lightweight scanner, uses only Glob/Grep, produces `docs/.data-manifest.json`
+- `doc-data-tables` (Wave 3) — one page per table with DBA scorecard
+- `doc-data-queries` (Wave 4) — one page per query with DBA scorecard
+- `doc-data-overview` (Wave 5) — rollup overviews, ERDs, pipelines
+
+When data files are found, create all 4 sections. Assign ALL data-related files to `doc-data-discover` in the manifest (it discovers the rest via Glob/Grep). The downstream skills (`doc-data-tables`, `doc-data-queries`, `doc-data-overview`) get empty file lists — they read `docs/.data-manifest.json` for their file inventory.
 
 #### Event Handlers / Async Triggers → feeds `doc-events`
 ```
@@ -210,7 +216,7 @@ Create a plan with sections to generate. Each section has:
 - `id`: skill name (e.g., "doc-c4", "doc-api")
 - `title`: human-readable title
 - `enabled`: boolean (true if relevant files found, or always true for doc-adr)
-- `wave`: execution wave (1-4) — determines when this section runs
+- `wave`: execution wave (1-6) — determines when this section runs
 - `file_count`: number of source files to analyze
 - `output_files`: list of markdown files to generate
 
@@ -219,9 +225,11 @@ Create a plan with sections to generate. Each section has:
 | Wave | Sections | Why |
 |------|----------|-----|
 | 1 | `doc-c4` | Establishes the system map. All other domains reference this. |
-| 2 | `doc-api`, `doc-data`, `doc-events` | Horizontal concerns traced across the system map. Independent of each other. |
-| 3 | `doc-security`, `doc-devops`, `doc-testing` | Cross-cutting analysis. Reads Wave 1-2 markdown for context. |
-| 4 | `doc-adr`, `doc-quality` | Assessment and synthesis. Reads all prior wave output. |
+| 2 | `doc-api`, `doc-data-discover`, `doc-events` | Horizontal concerns. Data discovery produces `.data-manifest.json` for downstream data skills. |
+| 3 | `doc-data-tables` | One page per table with DBA scorecard. Reads `.data-manifest.json` from Wave 2. |
+| 4 | `doc-data-queries` | One page per query with DBA scorecard. Reads table pages from Wave 3 for cross-referencing. |
+| 5 | `doc-security`, `doc-devops`, `doc-testing`, `doc-data-overview` | Cross-cutting analysis + data rollup overviews. Reads all prior wave output. |
+| 6 | `doc-adr`, `doc-quality` | Assessment and synthesis. Reads complete system picture. |
 
 Skip sections that have zero relevant files (except `doc-adr` — see note above).
 
@@ -237,16 +245,19 @@ Detected: {language} / {framework}
 |------|---------|-------|-------|--------|
 | 1 | Architecture (C4) | 45 | 6 | Enabled |
 | 2 | API Plane | 23 | 12 | Enabled |
-| 2 | Data / DBA Review | 35 | 40-80 | Enabled (1 page per table + 1 page per query) |
+| 2 | Data Discovery | 35 | manifest | Enabled |
 | 2 | Events & Async | 0 | 0 | Skipped (no async triggers found) |
-| 3 | Security | 8 | 3 | Enabled |
-| 3 | DevOps | 12 | 3 | Enabled |
-| 3 | Testing | 34 | 2 | Enabled |
-| 4 | ADRs | 5 | 8-12 | Enabled (inferred from code) |
-| 4 | Quality | 6 | 2 | Enabled |
+| 3 | Data Tables | — | 25 | Enabled (1 page per table) |
+| 4 | Data Queries | — | 50 | Enabled (1 page per query) |
+| 5 | Security | 8 | 3 | Enabled |
+| 5 | DevOps | 12 | 3 | Enabled |
+| 5 | Testing | 34 | 2 | Enabled |
+| 5 | Data Overviews | — | 5 | Enabled (rollup pages) |
+| 6 | ADRs | 5 | 8-12 | Enabled (inferred from code) |
+| 6 | Quality | 6 | 2 | Enabled |
 
-Total: ~8 sections, ~70-120 pages (4 execution waves)
-Note: Data section generates 1 page per table + 1 page per query — page count varies by codebase size
+Total: ~12 sections, ~100-150 pages (6 execution waves)
+Note: Data sections generate 1 page per table + 1 page per query — page count varies by codebase size
 
 Proceed with this plan? (You can disable sections or adjust)
 ```
@@ -299,7 +310,7 @@ If you can't find the script, use Glob: `**/doc-discover/references/validate-pla
 3. **Respect user choices** — if they disable a section, mark it `enabled: false`
 4. **Handle monorepos** — if multiple projects detected (multiple pom.xml, Cargo.toml at different paths), ask user which to document
 5. **Files should appear in at most 2-3 sections** — a Service file might feed both doc-c4 and doc-api, but not every section
-6. **The plan JSON MUST include `"wave"` on every section and a top-level `"waves"` object** — downstream commands depend on these exact field names
+6. **The plan JSON MUST include `"wave"` (integer 1-6) on every section and a top-level `"waves"` object** — downstream commands depend on these exact field names
 7. **Always enable doc-adr** unless the project is trivially small — it infers decisions from prior wave output even when no ADR files exist
 
 ## Tools

@@ -14,14 +14,20 @@ import os
 WAVE_ASSIGNMENTS = {
     "doc-c4": 1,
     "doc-api": 2,
-    "doc-data": 2,
+    "doc-data-discover": 2,
     "doc-events": 2,
-    "doc-security": 3,
-    "doc-devops": 3,
-    "doc-testing": 3,
-    "doc-adr": 4,
-    "doc-quality": 4,
+    "doc-data-tables": 3,
+    "doc-data-queries": 4,
+    "doc-security": 5,
+    "doc-devops": 5,
+    "doc-testing": 5,
+    "doc-data-overview": 5,
+    "doc-adr": 6,
+    "doc-quality": 6,
 }
+
+MAX_WAVE = 6
+VALID_WAVES = set(range(1, MAX_WAVE + 1))
 
 REQUIRED_TOP_KEYS = ["project_name", "language", "framework", "generated", "waves", "sections"]
 REQUIRED_SECTION_KEYS = ["id", "title", "enabled", "wave", "output_files"]
@@ -54,11 +60,12 @@ def validate(plan_path):
         if not isinstance(waves, dict):
             errors.append(f"\"waves\" must be an object, got {type(waves).__name__}")
         else:
-            for wnum in ["1", "2", "3", "4"]:
-                if wnum not in waves:
-                    errors.append(f"\"waves\" missing key \"{wnum}\"")
-                elif not isinstance(waves[wnum], list):
-                    errors.append(f"\"waves\".\"{wnum}\" must be an array")
+            for wnum in range(1, MAX_WAVE + 1):
+                wkey = str(wnum)
+                if wkey not in waves:
+                    errors.append(f"\"waves\" missing key \"{wkey}\"")
+                elif not isinstance(waves[wkey], list):
+                    errors.append(f"\"waves\".\"{wkey}\" must be an array")
 
     # --- Sections array ---
     sections = plan.get("sections")
@@ -84,8 +91,8 @@ def validate(plan_path):
                 # Wave value
                 wave_val = section.get("wave")
                 if wave_val is not None:
-                    if not isinstance(wave_val, int) or wave_val not in (1, 2, 3, 4):
-                        errors.append(f"{prefix}: \"wave\" must be integer 1-4, got {wave_val!r}")
+                    if not isinstance(wave_val, int) or wave_val not in VALID_WAVES:
+                        errors.append(f"{prefix}: \"wave\" must be integer 1-{MAX_WAVE}, got {wave_val!r}")
                     elif sid in WAVE_ASSIGNMENTS and wave_val != WAVE_ASSIGNMENTS[sid]:
                         errors.append(
                             f"{prefix}: \"wave\" is {wave_val} but should be "
