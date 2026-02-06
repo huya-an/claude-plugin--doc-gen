@@ -226,12 +226,31 @@ sequenceDiagram
 - Use `par` for async/parallel operations that happen after the response
 - Use `Note over` for internal processing descriptions
 
+### Data Operations Cross-Reference
+
+Every endpoint that reads or writes data must include a **Data Operations** section linking to the corresponding query and table documentation pages. This creates traceability from API → Query → Table.
+
+Add this section after Side Effects and before Sequence Diagram:
+
+```markdown
+### Data Operations
+
+| Operation | Query | Tables | Link |
+|---|---|---|---|
+| Load user vehicles | findActiveVehiclesByUserId | vehicle, user_vehicle | [view](data--postgres--queries--find-active-vehicles-by-user-id.md) |
+| Save new vehicle | save (vehicle) | vehicle | [view](data--postgres--queries--save-vehicle.md) |
+| Store image | uploadVehicleImage | S3 bucket | [view](data--s3--operations--upload-vehicle-image.md) |
+```
+
+If data pages have not been generated yet (doc-api runs in the same wave as doc-data), use the `--` filename convention to construct the expected link paths. The validation skill will verify these links resolve correctly.
+
 ### Rules
 - Parameter types must be specific and format-annotated (see type annotation table)
 - Response schemas must reflect actual DTO/model fields from the codebase
 - Error responses must reflect actual exception handling — list per endpoint, not just globally
 - Use real class/method names from the codebase
 - Cross-reference related endpoints (e.g., "See also: POST /vehicle/ for creation")
+- Cross-reference data operations using the `data--{store}--queries--{name}.md` link convention
 - For >20 endpoints, process in batches of ~5 grouped by resource; write index last
 - **Source files**: at the end of each page, include a `## Source Files` section listing the controller, service, and DTO/model files with relative paths from the project root
 

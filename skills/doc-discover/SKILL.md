@@ -87,17 +87,53 @@ Glob: **/*Service*, **/*UseCase*, **/*Interactor*, **/*Manager*, **/*Facade*, **
 Also: src/main/**/*, src/**/lib.rs, src/**/main.rs (entry points for C4 system boundary)
 ```
 
-#### Entities / Models / Migrations → feeds `doc-data`
+#### Entities / Models / Migrations / Repositories / Data Clients → feeds `doc-data`
 ```
-Glob: **/*Entity*, **/*Model*, **/*Schema*, **/*Migration*, **/*migration*, **/entities/*, **/models/*, **/domain/*
-Grep patterns:
-  Java: @Entity, @Table, @Column, @Id, @ManyToOne, @OneToMany
-  Rust: #[derive(.*Queryable.*)]  , diesel::table!, #[derive(.*FromRow.*)]
-  JS/TS: Schema.define, @Entity(), @Column(), model.define
-  Python: class.*Model, db.Column, models.Model
-  SQL: CREATE TABLE, ALTER TABLE
-Also: **/migrations/*, **/flyway/*, **/alembic/*, **/prisma/schema.prisma
+Entities and Models:
+  Glob: **/*Entity*, **/*Model*, **/*Schema*, **/*Migration*, **/*migration*, **/entities/*, **/models/*, **/domain/*
+  Grep patterns:
+    Java: @Entity, @Table, @Column, @Id, @ManyToOne, @OneToMany
+    Rust: #[derive(.*Queryable.*)]  , diesel::table!, #[derive(.*FromRow.*)]
+    JS/TS: Schema.define, @Entity(), @Column(), model.define
+    Python: class.*Model, db.Column, models.Model
+    SQL: CREATE TABLE, ALTER TABLE
+  Also: **/migrations/*, **/flyway/*, **/alembic/*, **/prisma/schema.prisma
+
+Repositories and Data Access (for query discovery):
+  Glob: **/*Repository*, **/*Repo.*, **/repository/*, **/repositories/*
+  Grep patterns:
+    Java: JpaRepository, CrudRepository, @Query, nativeQuery
+    Rust: diesel::query_dsl, sqlx::query, sea_orm::EntityTrait
+    JS/TS: Repository, getRepository, createQueryBuilder
+    Python: session.query, db.session
+
+DynamoDB / NoSQL Clients:
+  Glob: **/*DynamoDBClient*, **/*DynamoClient*, **/*MongoClient*, **/*DocumentClient*
+  Grep patterns:
+    Java: DynamoDbEnhancedClient, DynamoDbTable, @DynamoDbBean
+    JS/TS: DocumentClient, DynamoDB.DocumentClient
+    Python: boto3.resource('dynamodb')
+
+S3 / Object Store Clients:
+  Glob: **/*FileStore*, **/*S3Client*, **/*StorageService*, **/*BlobClient*
+  Grep patterns:
+    Java: AmazonS3, S3Client, putObject, getObject
+    JS/TS: S3Client, PutObjectCommand
+    Python: boto3.client('s3')
+
+Redis / Cache Clients:
+  Glob: **/*RedisClient*, **/*CacheService*, **/*RedisTemplate*
+  Grep patterns:
+    Java: RedisTemplate, @Cacheable, @CacheEvict, StringRedisTemplate
+    JS/TS: redis.createClient, ioredis
+    Python: redis.Redis, aioredis
+
+Stored Procedures:
+  Grep patterns in migration files:
+    SQL: CREATE FUNCTION, CREATE PROCEDURE, CREATE OR REPLACE FUNCTION
 ```
+
+**Note on file count:** `doc-data` will generate many more output pages than other skills (one per table + one per query). When building the manifest, include ALL repository and data client files — the agent needs them to discover every query method. Increase the file limit for `doc-data` to ~50 files if needed.
 
 #### Event Handlers / Async Triggers → feeds `doc-events`
 ```
@@ -201,7 +237,7 @@ Detected: {language} / {framework}
 |------|---------|-------|-------|--------|
 | 1 | Architecture (C4) | 45 | 6 | Enabled |
 | 2 | API Plane | 23 | 12 | Enabled |
-| 2 | Data / DBA | 15 | 4 | Enabled |
+| 2 | Data / DBA Review | 35 | 40-80 | Enabled (1 page per table + 1 page per query) |
 | 2 | Events & Async | 0 | 0 | Skipped (no async triggers found) |
 | 3 | Security | 8 | 3 | Enabled |
 | 3 | DevOps | 12 | 3 | Enabled |
@@ -209,7 +245,8 @@ Detected: {language} / {framework}
 | 4 | ADRs | 5 | 8-12 | Enabled (inferred from code) |
 | 4 | Quality | 6 | 2 | Enabled |
 
-Total: ~8 sections, ~38 pages (4 execution waves)
+Total: ~8 sections, ~70-120 pages (4 execution waves)
+Note: Data section generates 1 page per table + 1 page per query — page count varies by codebase size
 
 Proceed with this plan? (You can disable sections or adjust)
 ```

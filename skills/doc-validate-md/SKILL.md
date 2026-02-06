@@ -30,7 +30,7 @@ Initialize tracking:
 
 Split the file list into batches of 5. For each batch, read all files and check:
 
-1. **Frontmatter** — has `title` (non-empty string), `section` (non-empty), `order` (positive integer), `generated` (date string). ADR files additionally have `adr_status`, `adr_date`, `adr_inferred`.
+1. **Frontmatter** — has `title` (non-empty string), `section` (non-empty), `order` (positive integer), `generated` (date string). Optional: `subsection` (string, `/`-delimited for hierarchy — e.g., `"PostgreSQL/Tables"`). ADR files additionally have `adr_status`, `adr_date`, `adr_inferred`.
 2. **Mermaid diagram blocks** — every `` ```mermaid `` has a matching closing `` ``` ``. Inside each block:
    - First line declares a valid type: `C4Context`, `C4Container`, `C4Component`, `flowchart`, `sequenceDiagram`, `erDiagram`, `stateDiagram-v2`
    - Non-empty content (at least 2 lines after the type declaration)
@@ -68,6 +68,17 @@ Validated batch {n}: {file1}, {file2}, ... — {issues_found} issues
    - `testing-overview.md` ↔ `testing-strategy.md`
    - `quality-overview.md` ↔ `quality-recommendations.md`
    Report as WARNING if significant duplication found.
+4. **Data page cross-reference integrity** — if `data--` prefixed files exist:
+   - Verify every `data--{store}--queries--*.md` page has valid links in its "Tables Touched" section pointing to existing `data--{store}--tables--*.md` files
+   - Verify every `data--{store}--tables--*.md` page has valid links in its "Queries Using This Table" section pointing to existing query pages
+   - Verify API endpoint pages with "Data Operations" sections have valid links to data query/table pages
+   - Report broken cross-references as WARNING
+5. **Data page structure check** — for `data--` prefixed files (except overviews and pipelines):
+   - Verify the page has a `## Scorecard` section (must be the first `##` after the title)
+   - Verify the page has a `## Recommendations` section (must be the second `##`)
+   - Verify the Recommendations table has columns: #, Title, Category, Priority, Effort, Problem, Suggested Fix
+   - Report missing scorecard or recommendations as WARNING
+6. **Double-dash naming consistency** — verify `data--` files follow the convention: `data--{store}--{group}--{name}.md` with `--` as hierarchy separator and `-` as word separator. Report naming violations as INFO.
 
 ### Phase 4: Report
 
@@ -83,6 +94,8 @@ Legacy markers: {issue_count} issues
 Cross-references: {issue_count} issues
 Content quality: {issue_count} issues
 Structure (Source Files, tables): {issue_count} issues
+Data cross-references: {issue_count} issues
+Data page structure (scorecards, recommendations): {issue_count} issues
 
 {List each issue with filename, severity, and description}
 

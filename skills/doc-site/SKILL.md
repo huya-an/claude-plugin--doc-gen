@@ -69,8 +69,8 @@ theme:
   features:
     - navigation.instant
     - navigation.sections
-    - navigation.expand
     - navigation.top
+    - navigation.prune
     - search.highlight
     - content.code.copy
   palette:
@@ -143,49 +143,64 @@ This is intentionally minimal. The diagram-viewer.js injects all interactive sty
 
 ### Step 4: Generate Navigation from Frontmatter
 
-Read frontmatter from all markdown files. Build a `nav:` section grouped by `section` and ordered by `order`:
+Read frontmatter from all markdown files. Build a `nav:` section using `section`, `subsection` (optional), and `order` fields.
 
+#### Navigation Algorithm
+
+1. **Group by section** — collect all files by their `section` value
+2. **Within each section, split by subsection**:
+   - Files with no `subsection` go directly under the section
+   - Files with `subsection` are nested. Split the `subsection` value on `/` to create sub-levels.
+   - Example: `subsection: "PostgreSQL/Tables"` creates `section > PostgreSQL > Tables > page`
+3. **Order within each group** by the `order` frontmatter value (ascending)
+4. **Use the `title`** from frontmatter as the nav label
+
+#### Example with hierarchical data pages
+
+Given frontmatter like:
+```yaml
+# data--overview.md: section "Data", no subsection, order 1
+# data--pipelines.md: section "Data", no subsection, order 2
+# data--postgres--overview.md: section "Data", subsection "PostgreSQL", order 1
+# data--postgres--tables--users.md: section "Data", subsection "PostgreSQL/Tables", order 2
+# data--postgres--tables--vehicle.md: section "Data", subsection "PostgreSQL/Tables", order 3
+# data--postgres--queries--overview.md: section "Data", subsection "PostgreSQL/Queries", order 1
+# data--postgres--queries--find-by-id-vehicle.md: section "Data", subsection "PostgreSQL/Queries", order 2
+# data--dynamo--overview.md: section "Data", subsection "DynamoDB", order 1
+```
+
+Generates:
 ```yaml
 nav:
   - Home: index.md
   - Architecture:
     - Overview: arch-overview.md
     - C4 Level 1 — System Context: arch-c4-level1.md
-    - C4 Level 2 — Containers: arch-c4-level2.md
-    - C4 Level 3 — API Server: arch-c4-level3-api-server.md
-    - C4 Level 4 — Code: arch-c4-level4.md
-  - API Plane:
-    - Endpoint Index: api-index.md
-    - Vehicle Management API: api-vehicle-management.md
   - Data:
-    - Overview: data-overview.md
-    - Schema: data-schema.md
-    - Pipelines: data-pipelines.md
+    - Overview: data--overview.md
+    - Pipelines: data--pipelines.md
+    - PostgreSQL:
+      - Overview: data--postgres--overview.md
+      - Tables:
+        - users: data--postgres--tables--users.md
+        - vehicle: data--postgres--tables--vehicle.md
+      - Queries:
+        - Overview: data--postgres--queries--overview.md
+        - findByIdVehicle: data--postgres--queries--find-by-id-vehicle.md
+    - DynamoDB:
+      - Overview: data--dynamo--overview.md
   - Events:
     - Overview: events-overview.md
-    - Catalog: events-catalog.md
-    - Flows: events-flows.md
-  - Security:
-    - Overview: security-overview.md
-    - Auth: security-auth.md
-    - Threats: security-threats.md
-  - DevOps:
-    - Overview: devops-overview.md
-    - CI/CD: devops-cicd.md
-    - Infrastructure: devops-infra.md
-  - Testing:
-    - Overview: testing-overview.md
-    - Strategy: testing-strategy.md
-  - ADRs:
-    - Index: adr-index.md
-  - Quality:
-    - Overview: quality-overview.md
-    - Recommendations: quality-recommendations.md
 ```
+
+#### Backward compatibility
+
+The `subsection` field is **optional**. Files without a `subsection` (the majority of non-data pages) work exactly as before — grouped by `section`, ordered by `order`, 2-level navigation. Only pages that include `subsection` get deeper nesting.
 
 **Ordering rules:**
 - Sections appear in wave order: Architecture → API → Data → Events → Security → DevOps → Testing → ADRs → Quality
-- Within each section, pages are ordered by their `order` frontmatter value
+- Within each section, non-subsection pages come first (ordered by `order`), then subsection groups
+- Within each subsection group, pages are ordered by their `order` frontmatter value
 - Use the `title` from frontmatter as the nav label
 - ADR individual pages (adr-001.md, adr-002.md, etc.) are listed under the ADRs section after the index
 - `index.md` always comes first as "Home"
