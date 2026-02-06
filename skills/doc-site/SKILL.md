@@ -121,6 +121,8 @@ Create the interactive diagram viewer that adds pan/zoom and click-to-fullscreen
 
 #### Create `docs/md/js/diagram-viewer.js`
 
+> **CRITICAL: You MUST create `diagram-viewer.js` from the reference. Do NOT create a `mermaid-init.js` instead. The ESM module handles Mermaid initialization; diagram-viewer.js handles interactivity (pan/zoom/fullscreen). These are two separate concerns.**
+
 Write the file using the **exact content** from the `diagram-viewer.js` reference. This script:
 - Waits for Mermaid.js to render SVGs, then enhances each diagram container
 - Adds an expand button overlay and "click to expand" hint
@@ -133,13 +135,15 @@ Write the file using the **exact content** from the `diagram-viewer.js` referenc
 #### Create `docs/md/css/custom.css`
 
 ```css
+/* Responsive content width */
+.md-grid { max-width: 90rem; }
+.md-content { max-width: none; }
+
 /* Diagram alignment */
-.mermaid {
-  text-align: center;
-}
+.mermaid { text-align: center; }
 ```
 
-This is intentionally minimal. The diagram-viewer.js injects all interactive styles (borders, hover effects, modal, controls) at runtime. If the viewer JS fails to load, diagrams still render normally.
+The responsive overrides ensure content uses available screen width instead of being locked to 976px. The diagram-viewer.js injects all interactive styles (borders, hover effects, modal, controls) at runtime. If the viewer JS fails to load, diagrams still render normally.
 
 ### Step 4: Generate Navigation from Frontmatter
 
@@ -204,6 +208,8 @@ The `subsection` field is **optional**. Files without a `subsection` (the majori
 - Use the `title` from frontmatter as the nav label
 - ADR individual pages (adr-001.md, adr-002.md, etc.) are listed under the ADRs section after the index
 - `index.md` always comes first as "Home"
+
+> **CRITICAL: Every markdown file MUST have its own nav entry. Never collapse a subsection group into a single overview link. If there are 164 query files, there must be 164 nav entries under that subsection. A missing nav entry means the page is unreachable from navigation.**
 
 Update the `nav:` section in `mkdocs.yml` with the generated navigation.
 
