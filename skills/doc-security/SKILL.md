@@ -115,13 +115,29 @@ flowchart TD
 
 Use `flowchart TD` with nested `subgraph` blocks for trust boundaries (Public, DMZ, Internal). Label attack vector edges with threat ID, name, and STRIDE category.
 
+### OWASP Top 10 Table Format (security-threats.md)
+
+For each OWASP Top 10 category, assess applicability to this codebase:
+
+| # | Category | Applies | Mitigation in Code | Gaps |
+|---|----------|---------|-------------------|------|
+| A01 | Broken Access Control | Yes | JWT filter on all endpoints, role-based annotations | No rate limiting on auth endpoints |
+| A02 | Cryptographic Failures | Partial | TLS in transit, bcrypt for passwords | No encryption at rest for PII |
+| A03 | Injection | Yes | Parameterized queries via JPA | No input validation on free-text fields |
+
+**Applies** values: `Yes` (attack vector exists), `Partial` (some but not all vectors covered), `No` (not applicable to this system), `Unknown` (cannot determine from code alone).
+
+Every row must reference specific files where mitigations are implemented or where gaps were found.
+
 ### Rules
-- Auth flow diagram must show COMPLETE flow (login through token refresh)
-- Threat model must use real trust boundaries from the architecture
+- Auth flow diagram must show COMPLETE flow (login through token refresh through failure paths)
+- Threat model must use real trust boundaries from the architecture, not generic diagrams
+- STRIDE categorization must be applied to each identified threat
 - Recommendations must be specific and actionable (not generic "use HTTPS")
-- NEVER expose actual secrets, keys, or passwords -- redact them
+- NEVER expose actual secrets, keys, or passwords — redact them
 - If security config is minimal, note it as a finding rather than skipping
 - Every claim must reference specific code/config files
+- **Source files**: at the end of each page, include a `## Source Files` section listing the key security-relevant files analyzed (filters, auth configs, security annotations, CORS configs)
 
 ## Tools
 - Read

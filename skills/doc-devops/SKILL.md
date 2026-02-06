@@ -92,12 +92,23 @@ flowchart TD
 
 Use `flowchart TD` with nested `subgraph` for region > VPC > subnet boundaries. Label edges with port/protocol.
 
+### Missing Best Practices Section
+
+Each output file should include a **Missing Best Practices** or **Observations** section identifying gaps compared to industry standards. For each gap:
+- State what's missing
+- Explain why it matters
+- Suggest a specific remediation
+
+Examples: no health check endpoints, no rollback strategy, no canary/blue-green deployment, no auto-scaling rules, no smoke tests after deploy, no secret rotation policy, no monitoring/alerting configuration.
+
 ### Rules
 - Pipeline diagrams must show actual stages from config files
 - Infrastructure diagrams must reflect real resources, not generic cloud diagrams
-- NEVER expose secrets, tokens, or credentials -- redact them
-- Note missing best practices (no health checks, no rolling deployments, etc.)
+- NEVER expose secrets, tokens, or credentials — redact them
+- Note missing best practices (no health checks, no rolling deployments, etc.) with specific remediation suggestions
 - Reference specific config files for every claim
+- Environment-specific configurations (memory, capacity, DB endpoints) should be presented in comparison tables across environments
+- **Source files**: at the end of each page, include a `## Source Files` section listing the CI/CD configs, Dockerfiles, IaC files, and deployment configs analyzed
 
 ## Tools
 - Read

@@ -93,13 +93,35 @@ sequenceDiagram
 
 Use `sequenceDiagram` with `rect` blocks for saga phases and `alt` blocks for compensation flows.
 
+### Delivery Guarantees Table (events-catalog.md)
+
+For each topic/queue, document delivery semantics:
+
+| Topic/Queue | Delivery | Ordering | Idempotent Consumer | DLQ |
+|-------------|----------|----------|-------------------|-----|
+| orders.created | At-least-once | Partition key: orderId | Yes — dedup by eventId | orders.created.dlq |
+| notifications | At-most-once | No ordering guarantee | N/A | None |
+
+If the system handles idempotency (deduplication by event ID, upsert patterns), document the mechanism. If not, flag it as a gap.
+
+### Event Schema Versioning
+
+If events use schema versioning (Avro schema registry, JSON schema version field, protobuf package versions), document:
+- Current schema version per event type
+- How backward compatibility is maintained
+- What happens when a consumer receives an unknown schema version
+
+If no versioning exists, note this as a finding — "Events have no schema versioning. Adding a new field could break existing consumers."
+
 ### Rules
 - Every event type must appear in the catalog
 - Every producer-consumer pair must be documented
-- Flow diagrams must show complete chains including error paths
-- Payload schemas must include field types
+- Flow diagrams must show complete chains including error paths and DLQ
+- Payload schemas must include field types with format annotations (same as doc-api schema type annotations)
+- Delivery guarantees must be documented per topic/queue
 - Reference source files for every event handler
 - If no events exist, produce minimal files noting the system is synchronous
+- **Source files**: at the end of each page, include a `## Source Files` section listing event producers, consumers, broker configs, and event payload classes
 
 ## Tools
 - Read

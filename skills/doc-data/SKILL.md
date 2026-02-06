@@ -98,13 +98,41 @@ flowchart LR
 
 Use `flowchart LR` for data flows. Stages as nodes, transformations as edge labels, subgraphs for boundaries.
 
+### ERD Splitting Rule
+
+If the schema has **more than 15 entities**, split into domain-focused sub-ERDs:
+1. One ERD per functional domain (e.g., "Vehicle Entities", "User & Auth Entities", "Telematics Entities")
+2. Each sub-ERD shows full detail for its domain entities and uses simplified references for cross-domain foreign keys
+3. A single "full schema" ERD can be included as an overview, but with abbreviated entity definitions (just PK/FK columns) to keep it readable
+
+This prevents large schemas from producing unreadable diagrams.
+
+### Non-Relational Data Stores
+
+If the system uses non-relational stores (DynamoDB, MongoDB, Redis, S3), document them in `data-overview.md` alongside the relational schema:
+
+**DynamoDB/Document stores:**
+| Table | Partition Key | Sort Key | GSIs | Purpose |
+|-------|-------------|----------|------|---------|
+
+**Redis/Cache stores:**
+| Key Pattern | Value Type | TTL | Purpose |
+|------------|-----------|-----|---------|
+
+**Object stores (S3, GCS):**
+| Bucket/Path Pattern | Content Type | Lifecycle | Purpose |
+|--------------------|-------------|-----------|---------|
+
 ### Rules
 - Every entity in the codebase must appear in the ERD
 - All relationships must show cardinality (1:1, 1:N, N:M)
 - Column types must be specific (VARCHAR(255), not just "string")
 - Foreign keys must be explicitly labeled
-- If migrations exist, note current schema version
+- If migrations exist, note current schema version and the range of migration files
+- ERDs with >15 entities must be split into domain-focused sub-diagrams
+- Non-relational data stores must be documented with their access patterns
 - Reference source files (entity classes, migration files) for every table
+- **Source files**: at the end of each page, include a `## Source Files` section listing entity classes, repository files, migration files, and data access configuration
 
 ## Tools
 - Read
