@@ -1,6 +1,6 @@
 {
   "name": "claude-doc-gen",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Generates comprehensive documentation for any codebase with C4 architecture diagrams, API docs, ADRs, and more",
   "author": {
     "name": "huya-an"
