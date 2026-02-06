@@ -1,7 +1,7 @@
 # doc-api
 
 ## Description
-Generates API documentation: endpoint index, per-endpoint pages with Mermaid sequence diagrams, request/response schemas, and call graphs. Runs as Wave 2.
+Generates API documentation: endpoint index, domain-grouped detail pages with Mermaid sequence diagrams for non-trivial endpoints, request/response schemas, and error contracts. Runs as Wave 2.
 
 ## Context
 fork
@@ -20,32 +20,182 @@ fork
 
 ### Analysis Steps
 1. **Discover endpoints** — scan controllers/routes for HTTP method annotations/calls (e.g. `@GetMapping`, `app.get()`, `@app.route()`, `http.HandleFunc()`). Extract: method, path, params, request/response types.
-2. **Trace call chains** — for each endpoint follow controller -> service -> repository/DB -> external APIs -> events. Map the complete chain.
+2. **Trace call chains** — for each endpoint follow controller -> service -> repository/DB -> external APIs -> events. Map the complete chain. Flag endpoints that trigger async side effects after returning a response.
 3. **Document request/response** — path params, query params, request body schema (from DTOs/models), response schema, error responses (from exception handlers), auth requirements.
+4. **Classify auth level** — for each endpoint, determine the auth level:
+   - `JWT` — requires valid JWT token, request fails without it
+   - `JWT (optional)` — extracts user context from JWT if present, works without it
+   - `Internal` — no JWT, intended for service-to-service calls (typically under `/internal/` or `/event/` paths)
+   - `None` — public endpoint, no auth of any kind
 
 ### Output Files
 All files go to `docs/md/`.
 
-**`api-index.md`** — Frontmatter: title "API Endpoint Index", section "API Plane", order 1, generated "{{DATE}}". Content: summary table of ALL endpoints (Method | Path | Description | Auth Required) grouped by resource/domain. Link each row to its detail page.
+#### `api-index.md` — The API Reference Home
 
-**`api-{method}-{path-slug}.md`** (one per endpoint) — Naming: `POST /api/v1/payments` -> `api-post-payments.md`, `GET /api/v1/payments/{id}` -> `api-get-payments-id.md`. Frontmatter: title "{METHOD} {PATH}", section "API Plane", order N, generated "{{DATE}}". Sections: Overview, Authentication, Parameters (table), Request Body, Response, Error Responses, Sequence Diagram, Related Endpoints.
+Frontmatter: title "API Endpoint Index", section "API Plane", order 1, generated "{{DATE}}".
 
-### Diagram Format — Mermaid Sequence Diagrams
+Content structure:
 
-Every endpoint gets a `sequenceDiagram` block showing the full request lifecycle:
+**1. API at a Glance** — a preamble before the endpoint tables:
+- Total endpoint count
+- Base path / context root (e.g., `/vehicle-mgmt`, `/insight-trip`)
+- API versioning approach (URL-based, header-based, none)
+- Auth model summary: explain the 4 auth levels (JWT, JWT optional, Internal, None) in 1-2 sentences each
+- Common patterns:
+  - Pagination: how pagination works if the API uses it (offset, cursor, page/pageSize defaults)
+  - Error envelope: the standard error response shape
+  - Content types: default is `application/json` unless noted otherwise on specific endpoints
+  - Async pattern: how async endpoints work (return immediately with acknowledgment, processing continues)
+
+**2. Common Request Flow** — a single `sequenceDiagram` showing the standard CRUD flow that most simple endpoints follow:
 
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant G as API Gateway
+    participant Ctrl as Controller
+    participant Auth as Auth Filter
+    participant Svc as Service
+    participant Repo as Repository
+    participant DB as Database
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Auth: Validate JWT (if required)
+    Auth-->>Ctrl: Claims / 401
+    Ctrl->>Svc: Business method
+    Svc->>Repo: Data operation
+    Repo->>DB: SQL query
+    DB-->>Repo: Result
+    Repo-->>Svc: Entity/List
+    Svc-->>Ctrl: DTO
+    Ctrl-->>C: HTTP Response
+```
+
+Add a note: "Simple CRUD endpoints (get-by-id, delete-by-id, list, catalog lookups) follow this standard pattern. Only endpoints with non-trivial logic have dedicated sequence diagrams on their detail pages."
+
+**3. Endpoint tables** — grouped by resource/domain. Each table has columns:
+
+| Method | Path | Description | Auth | Notes |
+|--------|------|-------------|------|-------|
+
+- **Auth** column uses the 4-level classification: `JWT`, `JWT (opt)`, `Internal`, `None`
+- **Notes** column for important metadata: `async`, `multipart`, `deprecated`, `paginated`, `idempotent`
+- Link each domain group heading to its detail page
+
+**4. Global Error Responses** — a table mapping exceptions to HTTP statuses, showing the standard error contract.
+
+#### `api-{domain}.md` — Domain-Grouped Detail Pages
+
+**Group endpoints by resource/domain**, NOT one file per endpoint. Grouping follows the controller structure:
+- One file per controller or per logical domain (e.g., `api-vehicle-management.md`, `api-trips.md`, `api-smartcar.md`)
+- Max ~15 endpoints per file. If a domain has more, split into sub-domains.
+- File naming: `api-{domain-slug}.md` (e.g., `api-vehicle-services.md`, `api-clumping.md`)
+
+Frontmatter: title "{Domain Name} API", section "API Plane", order N, generated "{{DATE}}".
+
+**Content per endpoint:**
+
+```
+## {METHOD} {PATH}
+
+{One-line description of what this endpoint does.}
+
+### Metadata
+
+| Property | Value |
+|----------|-------|
+| Auth | JWT / JWT (opt) / Internal / None |
+| Content-Type | application/json / multipart/form-data |
+| Idempotent | Yes / No |
+| Async | Yes — returns immediately, processing continues / No |
+
+### Parameters
+
+| Name | In | Type | Required | Description |
+|------|-----|------|----------|-------------|
+| vehicleId | path | string (UUID) | Yes | Vehicle identifier |
+| page | query | number (integer) | No | Page number, default 0 |
+
+### Request Body
+
+{JSON schema with format-annotated types. Only if endpoint accepts a body.}
+
+### Response
+
+**{Status Code}:** {Description}
+{JSON schema with format-annotated types}
+
+### Error Responses
+
+| Status | Condition | Body |
+|--------|-----------|------|
+| 400 | Vehicle not found | `{"error": "Vehicle not found in records"}` |
+| 401 | Invalid/missing JWT | `{"error": "Authorization Denied"}` |
+
+### Side Effects
+
+{Only include this section if the endpoint triggers operations beyond the response:}
+- Publishes `VehicleAddedEvent` to Redpanda
+- Triggers async Experian history fetch (if VIN present)
+- Triggers async vehicle price estimation
+- Sends push notification to vehicle admins
+
+### Sequence Diagram
+
+{Only for non-trivial endpoints — see diagram rules below}
+```
+
+### Schema Type Annotations
+
+Use format-annotated types in all request/response schemas. Never use bare "string" or "number":
+
+| Raw Type | Annotated Type | When to Use |
+|----------|---------------|-------------|
+| string | `string (UUID)` | IDs, foreign keys |
+| string | `string (ISO-8601)` | Timestamps, dates |
+| string | `string (enum: VALUE1\|VALUE2\|VALUE3)` | Enum fields — list ALL values |
+| string | `string` | Freetext only (names, descriptions) |
+| string | `string (max 17 chars)` | Length-constrained fields |
+| number | `number (integer)` | Counts, pages, mileage |
+| number | `number (decimal)` | Prices, coordinates |
+| boolean | `boolean` | Boolean flags |
+| object | `object` | Nested objects — show structure |
+
+For enums, ALWAYS list all values inline: `"status": "string (enum: PENDING|CONFIRMED|COMPLETED|CANCELLED|MISSED|DELETED)"`
+
+### Diagram Rules — When to Include Sequence Diagrams
+
+**DO include a sequence diagram** when the endpoint has ANY of:
+- **Branching logic** — different paths based on input or state (alt/else blocks)
+- **External service calls** — reaches out to another API, message broker, or third-party service
+- **Async processing** — returns immediately but triggers background work
+- **Caching/rate-limiting** — checks cache before proceeding, enforces rate limits
+- **Multi-step orchestration** — >3 meaningful steps beyond the standard CRUD pattern
+- **State transitions** — changes entity status with business rules governing the transition
+- **Data transformation** — complex mapping, merging, or enrichment before persistence
+
+**DO NOT include a sequence diagram** when:
+- The endpoint is simple CRUD: get-by-id, delete-by-id, basic list/filter
+- The endpoint is a pure proxy (forwards request to another service unchanged)
+- The endpoint is a catalog lookup (years, makes, models, trims, colors, images)
+- The flow is identical to the "Common Request Flow" diagram in the index
+
+These trivial endpoints are covered by the single "Common Request Flow" diagram in `api-index.md`.
+
+### Diagram Format — Mermaid Sequence Diagrams
+
+For qualifying endpoints, include a `sequenceDiagram` block showing the full request lifecycle:
+
+```mermaid
+sequenceDiagram
+    participant C as Client
     participant Ctrl as PaymentController
     participant Svc as PaymentService
     participant Repo as PaymentRepository
     participant DB as PostgreSQL
     participant Ext as Stripe API
 
-    C->>G: POST /api/payments
-    G->>Ctrl: forward request
+    C->>Ctrl: POST /api/payments
     Ctrl->>Svc: execute(paymentRequest)
     Svc->>Svc: Validate request fields
     Svc->>Repo: save(paymentRecord)
@@ -54,20 +204,17 @@ sequenceDiagram
     Svc->>Ext: charge(amount, token)
     Ext-->>Svc: chargeResult
     Svc-->>Ctrl: PaymentDTO
-    Ctrl-->>G: 201 Created
-    G-->>C: 201 Created
+    Ctrl-->>C: 201 Created
 
     alt Validation failure
         Svc-->>Ctrl: 400 Bad Request
-        Ctrl-->>G: 400
-        G-->>C: 400
+        Ctrl-->>C: 400
     end
 
     alt External service error
         Ext-->>Svc: PaymentDeclinedError
         Svc-->>Ctrl: 402 Payment Required
-        Ctrl-->>G: 402
-        G-->>C: 402
+        Ctrl-->>C: 402
     end
 ```
 
@@ -76,16 +223,17 @@ sequenceDiagram
 - `-->>` dashed arrow: response / return value
 - Use `alt`/`else` for error paths
 - Use `opt` for optional flows (e.g., caching, idempotency)
+- Use `par` for async/parallel operations that happen after the response
 - Use `Note over` for internal processing descriptions
 
 ### Rules
-- EVERY endpoint must have a sequence diagram
-- Parameter types must be specific (String, Long, UUID -- not "any")
-- Response schemas must reflect actual DTO/model fields
-- Error responses must reflect actual exception handling
+- Parameter types must be specific and format-annotated (see type annotation table)
+- Response schemas must reflect actual DTO/model fields from the codebase
+- Error responses must reflect actual exception handling — list per endpoint, not just globally
 - Use real class/method names from the codebase
-- Cross-reference related endpoints
+- Cross-reference related endpoints (e.g., "See also: POST /vehicle/ for creation")
 - For >20 endpoints, process in batches of ~5 grouped by resource; write index last
+- **Source files**: at the end of each page, include a `## Source Files` section listing the controller, service, and DTO/model files with relative paths from the project root
 
 ## Tools
 - Read
@@ -96,4 +244,4 @@ sequenceDiagram
 ## Output
 Markdown files in `docs/md/`:
 - `api-index.md`
-- `api-{method}-{path-slug}.md` (one per endpoint)
+- `api-{domain}.md` (one per resource/domain group)
