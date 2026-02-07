@@ -7,6 +7,7 @@ Phase 2 site generator: runs `mkdocs build` to convert markdown documentation in
 fork
 
 ## References
+- references/mermaid-init.js
 - references/diagram-viewer.js
 
 ## Instructions
@@ -101,7 +102,8 @@ markdown_extensions:
   - tables
 
 extra_javascript:
-  - https://unpkg.com/mermaid@10.9.1/dist/mermaid.esm.min.mjs
+  - path: js/mermaid-init.js
+    type: module
   - js/diagram-viewer.js
 
 extra_css:
@@ -111,17 +113,57 @@ nav:
   # Will be generated from frontmatter
 ```
 
-**Mermaid.js version:** Pin to a specific version (10.9.1) rather than `@10` to avoid breaking changes. Update this version periodically.
+**Mermaid initialization:** The `js/mermaid-init.js` is an ESM module that imports Mermaid 10.9.1, unwraps the `<code>` tags pymdownx.superfences adds inside `<pre class="mermaid">`, and calls `mermaid.run()`. It MUST be loaded with `type: module`. Pin to a specific Mermaid version to avoid breaking changes.
 
-**Diagram viewer:** The `js/diagram-viewer.js` file provides interactive pan/zoom and fullscreen modal for all rendered Mermaid diagrams. It loads after Mermaid.js and enhances diagrams automatically.
+**Diagram viewer:** The `js/diagram-viewer.js` file provides interactive pan/zoom and fullscreen modal for all rendered Mermaid diagrams. It loads after mermaid-init.js renders SVGs and enhances diagrams automatically.
 
-### Step 3a: Create Diagram Viewer Assets
+### Step 3a: Create Diagram Assets
 
-Create the interactive diagram viewer that adds pan/zoom and click-to-fullscreen modal to all Mermaid diagrams.
+Create three JS/CSS files that handle Mermaid rendering and diagram interactivity.
+
+#### Create `docs/md/js/mermaid-init.js`
+
+> **CRITICAL: This file MUST be created. Without it, Mermaid diagrams will NOT render.**
+
+pymdownx.superfences renders mermaid blocks as `<pre class="mermaid"><code>...source...</code></pre>`. Mermaid.js cannot parse the `<code>` wrapper. This init script unwraps it and triggers rendering.
+
+Write this **exact content**:
+
+```javascript
+import mermaid from "https://unpkg.com/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: "default",
+  securityLevel: "loose",
+});
+
+function renderDiagrams() {
+  var els = document.querySelectorAll("pre.mermaid");
+  if (!els.length) return;
+  els.forEach(function (pre) {
+    var code = pre.querySelector("code");
+    if (code) {
+      pre.textContent = code.textContent;
+    }
+  });
+  mermaid.run({ nodes: els });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderDiagrams);
+} else {
+  renderDiagrams();
+}
+
+if (typeof document$ !== "undefined") {
+  document$.subscribe(function () { renderDiagrams(); });
+}
+```
 
 #### Create `docs/md/js/diagram-viewer.js`
 
-> **CRITICAL: You MUST create `diagram-viewer.js` from the reference. Do NOT create a `mermaid-init.js` instead. The ESM module handles Mermaid initialization; diagram-viewer.js handles interactivity (pan/zoom/fullscreen). These are two separate concerns.**
+> **CRITICAL: You MUST also create `diagram-viewer.js` from the reference. mermaid-init.js handles rendering; diagram-viewer.js handles interactivity (pan/zoom/fullscreen). These are two separate files with two separate concerns.**
 
 Write the file using the **exact content** from the `diagram-viewer.js` reference. This script:
 - Waits for Mermaid.js to render SVGs, then enhances each diagram container
