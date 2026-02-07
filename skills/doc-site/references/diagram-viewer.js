@@ -20,19 +20,39 @@
     /* Enhanced diagram container */
     '.mermaid.diagram-enhanced {',
     '  position: relative;',
-    '  cursor: pointer;',
+    '  cursor: grab;',
     '  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);',
     '  border-radius: 8px;',
     '  padding: 1rem;',
     '  margin: 1.5em 0;',
     '  background: var(--md-default-bg-color, #fff);',
-    '  overflow: auto;',
+    '  overflow: hidden;',
     '  min-height: 200px;',
     '  transition: box-shadow 0.2s ease;',
     '}',
+    '.mermaid.diagram-enhanced.inline-panning { cursor: grabbing; }',
     '.mermaid.diagram-enhanced:hover {',
     '  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);',
     '}',
+    '.mermaid.diagram-enhanced svg {',
+    '  transform-origin: 0 0;',
+    '}',
+    /* Inline zoom level badge */
+    '.diagram-zoom-badge {',
+    '  position: absolute;',
+    '  bottom: 8px;',
+    '  left: 12px;',
+    '  font-size: 0.7rem;',
+    '  color: var(--md-default-fg-color--light, #888);',
+    '  background: rgba(255, 255, 255, 0.85);',
+    '  padding: 2px 8px;',
+    '  border-radius: 4px;',
+    '  opacity: 0;',
+    '  transition: opacity 0.2s;',
+    '  pointer-events: none;',
+    '  z-index: 5;',
+    '}',
+    '.mermaid.diagram-enhanced:hover .diagram-zoom-badge { opacity: 1; }',
 
     /* Expand button */
     '.diagram-expand-btn {',
@@ -80,7 +100,7 @@
     '  position: fixed;',
     '  inset: 0;',
     '  z-index: 10000;',
-    '  background: rgba(0, 0, 0, 0.88);',
+    '  background: #ffffff;',
     '  display: flex;',
     '  align-items: center;',
     '  justify-content: center;',
@@ -123,8 +143,8 @@
     '  display: inline-flex;',
     '  align-items: center;',
     '  justify-content: center;',
-    '  background: rgba(255, 255, 255, 0.95);',
-    '  border: none;',
+    '  background: #f0f0f0;',
+    '  border: 1px solid #ccc;',
     '  border-radius: 6px;',
     '  cursor: pointer;',
     '  font-size: 18px;',
@@ -134,7 +154,7 @@
     '  padding: 0 8px;',
     '  user-select: none;',
     '}',
-    '.diagram-modal-btn:hover { background: #fff; }',
+    '.diagram-modal-btn:hover { background: #e0e0e0; }',
     '.diagram-modal-btn[data-action="reset"] {',
     '  font-size: 13px;',
     '  font-weight: 500;',
@@ -147,7 +167,7 @@
 
     /* Zoom level indicator */
     '.diagram-modal-zoom-level {',
-    '  color: rgba(255, 255, 255, 0.7);',
+    '  color: #666;',
     '  font-size: 13px;',
     '  font-weight: 500;',
     '  margin-right: 4px;',
@@ -161,7 +181,7 @@
     '  bottom: 16px;',
     '  left: 50%;',
     '  transform: translateX(-50%);',
-    '  color: rgba(255, 255, 255, 0.5);',
+    '  color: #999;',
     '  font-size: 12px;',
     '  z-index: 10001;',
     '  pointer-events: none;',
@@ -209,6 +229,9 @@
       el.dataset.diagramEnhanced = 'true';
       el.classList.add('diagram-enhanced');
 
+      var svg = el.querySelector('svg');
+      if (!svg) return;
+
       /* Expand button */
       var btn = document.createElement('button');
       btn.className = 'diagram-expand-btn';
@@ -217,17 +240,94 @@
       btn.innerHTML = EXPAND_ICON;
       el.appendChild(btn);
 
+      /* Zoom badge */
+      var badge = document.createElement('span');
+      badge.className = 'diagram-zoom-badge';
+      badge.textContent = '100%';
+      el.appendChild(badge);
+
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        openModal(el.querySelector('svg'));
+        openModal(svg);
       });
 
+      /* ── Inline pan/zoom state ── */
+      var iScale = 1;
+      var iPanX = 0;
+      var iPanY = 0;
+      var iPanning = false;
+      var iStartX = 0;
+      var iStartY = 0;
+      var iMoved = false;
+
+      function iApply() {
+        svg.style.transform =
+          'translate(' + iPanX + 'px, ' + iPanY + 'px) scale(' + iScale + ')';
+        badge.textContent = Math.round(iScale * 100) + '%';
+      }
+
+      /* Mouse wheel zoom */
+      el.addEventListener(
+        'wheel',
+        function (e) {
+          e.preventDefault();
+          var factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+          var newScale = Math.max(0.2, Math.min(10, iScale * factor));
+          var rect = el.getBoundingClientRect();
+          var mx = e.clientX - rect.left;
+          var my = e.clientY - rect.top;
+          iPanX = mx - (newScale / iScale) * (mx - iPanX);
+          iPanY = my - (newScale / iScale) * (my - iPanY);
+          iScale = newScale;
+          iApply();
+        },
+        { passive: false }
+      );
+
+      /* Mouse drag pan */
+      el.addEventListener('mousedown', function (e) {
+        if (e.target.closest('.diagram-expand-btn')) return;
+        if (e.button !== 0) return;
+        iPanning = true;
+        iMoved = false;
+        iStartX = e.clientX - iPanX;
+        iStartY = e.clientY - iPanY;
+        el.classList.add('inline-panning');
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', function (e) {
+        if (!iPanning) return;
+        iPanX = e.clientX - iStartX;
+        iPanY = e.clientY - iStartY;
+        iMoved = true;
+        iApply();
+      });
+
+      document.addEventListener('mouseup', function () {
+        if (iPanning) {
+          iPanning = false;
+          el.classList.remove('inline-panning');
+        }
+      });
+
+      /* Click to open modal — only if user didn't drag */
       el.addEventListener('click', function (e) {
         if (e.target.closest('.diagram-expand-btn')) return;
-        /* Skip if user is selecting text */
+        if (iMoved) { iMoved = false; return; }
         var sel = window.getSelection();
         if (sel && sel.toString().length > 0) return;
-        openModal(el.querySelector('svg'));
+        openModal(svg);
+      });
+
+      /* Double-click to reset inline zoom */
+      el.addEventListener('dblclick', function (e) {
+        if (e.target.closest('.diagram-expand-btn')) return;
+        e.preventDefault();
+        iScale = 1;
+        iPanX = 0;
+        iPanY = 0;
+        iApply();
       });
     });
   }
