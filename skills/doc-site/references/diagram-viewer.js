@@ -202,13 +202,17 @@
 
   /* ── Init: wait for Mermaid SVGs, then enhance ───────────────── */
   function init() {
-    var containers = document.querySelectorAll('.mermaid');
-    if (!containers.length) return;
-
     var attempts = 0;
     var maxAttempts = 50; /* 10 s at 200 ms */
 
     function check() {
+      /* Re-query every poll — mermaid.run() may replace DOM nodes */
+      var containers = document.querySelectorAll('.mermaid');
+      if (!containers.length) {
+        if (++attempts < maxAttempts) setTimeout(check, 200);
+        return;
+      }
+
       var ready = true;
       containers.forEach(function (el) {
         if (!el.querySelector('svg')) ready = false;
