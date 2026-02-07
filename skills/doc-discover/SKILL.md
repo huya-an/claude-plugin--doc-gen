@@ -268,26 +268,72 @@ Use AskUserQuestion to get approval. Allow the user to disable/enable sections.
 
 After approval, create `docs/` directory if needed (`mkdir -p docs`).
 
-#### 6a: Read the template
+#### 6a: Copy the template verbatim
 
-Read `{SKILLS_DIR}/doc-discover/references/plan-template.json` (where `SKILLS_DIR` is the path where you found this SKILL.md). This template contains the required JSON structure with all 9 sections, correct `"wave"` values, and the `"waves"` object. Use it as the basis for your output.
+1. Read `{SKILLS_DIR}/doc-discover/references/plan-template.json` (where `SKILLS_DIR` is the path where you found this SKILL.md)
+2. Write its contents **verbatim** to `docs/.doc-plan.json` using the Write tool — do not modify it yet
 
-#### 6b: Write `docs/.doc-plan.json`
+This two-step approach ensures the JSON skeleton is always correct before you start editing.
 
-Write the plan JSON to `docs/.doc-plan.json`. Fill in:
-- `project_name`, `language`, `framework`, `generated` (today's date)
-- For each section: `enabled`, `file_count`, `output_files`
-- Update the `"waves"` object to only include enabled section IDs
+**Fallback — if you cannot read the template**, use this exact JSON skeleton instead:
 
-Keep the structure from the template: every section must have a `"wave"` field (integer 1-4), and the top level must have a `"waves"` object.
+```json
+{
+  "project_name": "REPLACE_PROJECT_NAME",
+  "language": "REPLACE_LANGUAGE",
+  "framework": "REPLACE_FRAMEWORK",
+  "generated": "REPLACE_DATE",
+  "waves": {
+    "1": ["doc-c4"],
+    "2": ["doc-api", "doc-data-discover", "doc-events"],
+    "3": ["doc-data-tables"],
+    "4": ["doc-data-queries"],
+    "5": ["doc-security", "doc-devops", "doc-testing", "doc-data-overview"],
+    "6": ["doc-adr", "doc-quality"]
+  },
+  "sections": [
+    { "id": "doc-c4",             "title": "Architecture (C4)", "enabled": false, "wave": 1, "file_count": 0, "output_files": [] },
+    { "id": "doc-api",            "title": "API Plane",         "enabled": false, "wave": 2, "file_count": 0, "output_files": [] },
+    { "id": "doc-data-discover",  "title": "Data Discovery",    "enabled": false, "wave": 2, "file_count": 0, "output_files": [] },
+    { "id": "doc-events",         "title": "Events & Async",    "enabled": false, "wave": 2, "file_count": 0, "output_files": [] },
+    { "id": "doc-data-tables",    "title": "Data Tables",       "enabled": false, "wave": 3, "file_count": 0, "output_files": [] },
+    { "id": "doc-data-queries",   "title": "Data Queries",      "enabled": false, "wave": 4, "file_count": 0, "output_files": [] },
+    { "id": "doc-security",       "title": "Security",          "enabled": false, "wave": 5, "file_count": 0, "output_files": [] },
+    { "id": "doc-devops",         "title": "DevOps",            "enabled": false, "wave": 5, "file_count": 0, "output_files": [] },
+    { "id": "doc-testing",        "title": "Testing",           "enabled": false, "wave": 5, "file_count": 0, "output_files": [] },
+    { "id": "doc-data-overview",  "title": "Data Overviews",    "enabled": false, "wave": 5, "file_count": 0, "output_files": [] },
+    { "id": "doc-adr",            "title": "ADRs",              "enabled": false, "wave": 6, "file_count": 0, "output_files": [] },
+    { "id": "doc-quality",        "title": "Quality",           "enabled": false, "wave": 6, "file_count": 0, "output_files": [] }
+  ]
+}
+```
+
+#### 6b: Fill in project-specific fields
+
+Use the **Edit** tool to update `docs/.doc-plan.json` (do NOT rewrite the entire file):
+
+1. Replace `REPLACE_PROJECT_NAME`, `REPLACE_LANGUAGE`, `REPLACE_FRAMEWORK`, `REPLACE_DATE` with actual values
+2. For each section: set `enabled` to `true`/`false`, fill in `file_count`, fill in `output_files`
+3. Update the `"waves"` object: remove disabled section IDs from each wave's array
+
+**Critical rules:**
+- Every section must have a `"wave"` field (integer 1-6) — do NOT change wave values from the template
+- The top level must have a `"waves"` object with keys `"1"` through `"6"`
+- `"sections"` must be an **array** (not an object)
+- Do NOT add keys like `"priority"`, `"order"`, or `"rank"` — use `"wave"` only
 
 #### 6c: Write `docs/.doc-manifest.json`
 
 Write the manifest JSON. For each enabled section, list the source files and batch size. Disabled sections can have empty arrays. Group files so no section gets more than ~30 files.
 
-### Step 7: Validate Plan JSON (MANDATORY)
+### Step 7: Validate Plan JSON — EXIT GATE (MANDATORY)
 
-Run the schema validator. This is a **blocking requirement** — you must not proceed until the validator passes.
+**Your task is NOT complete until the validator prints PASS.**
+**Do NOT display next steps, do NOT report success, do NOT stop until PASS.**
+
+This is the absolute final step. Nothing comes after this except reporting the result.
+
+#### 7a: Run the validator
 
 ```
 python3 {SKILLS_DIR}/doc-discover/references/validate-plan.py docs/.doc-plan.json
@@ -295,13 +341,26 @@ python3 {SKILLS_DIR}/doc-discover/references/validate-plan.py docs/.doc-plan.jso
 
 If you can't find the script, use Glob: `**/doc-discover/references/validate-plan.py`
 
-**If the validator outputs `FAIL`:**
+#### 7b: If PASS — you are done
+
+Report success and display the next steps to the user.
+
+#### 7c: If FAIL — fix and retry (up to 3 attempts)
+
 1. Read the error messages — they tell you exactly what's wrong
 2. Use Edit to fix each error in `docs/.doc-plan.json`
 3. Run the validator again
-4. Repeat until the output is `PASS`
+4. If it still fails, repeat (attempt 2 of 3)
+5. If it still fails, repeat one final time (attempt 3 of 3)
 
-**You MUST NOT proceed to the next step until the validator prints `PASS`.** This is not optional. Do not skip this step.
+**If still FAIL after 3 fix attempts:** STOP and report the remaining errors to the user. Do NOT silently succeed. Do NOT display "next steps" as if the plan were valid. Say:
+
+```
+Plan validation failed after 3 fix attempts. Remaining errors:
+  - [list errors from validator output]
+
+Please review docs/.doc-plan.json manually or re-run /doc to regenerate.
+```
 
 ### Important Rules
 
