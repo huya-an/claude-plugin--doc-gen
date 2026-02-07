@@ -2,7 +2,7 @@
  * Mermaid initializer for MkDocs Material + pymdownx.superfences.
  *
  * pymdownx.superfences renders mermaid blocks as:
- *   <pre class="mermaid"><code>...diagram source...</code></pre>
+ *   <pre class="mermaid-raw"><code>...diagram source...</code></pre>
  *
  * Mermaid.js expects the source directly inside the container (no <code> wrapper).
  * This script unwraps <code> tags, then calls mermaid.run() to render SVGs.
@@ -20,7 +20,7 @@
   });
 
   function renderDiagrams() {
-    var els = document.querySelectorAll('pre.mermaid');
+    var els = document.querySelectorAll('pre.mermaid-raw');
     if (!els.length) return;
 
     els.forEach(function (pre) {

@@ -4,7 +4,7 @@
  * Self-contained: injects its own CSS, no external dependencies.
  * Works with MkDocs Material + pymdownx.superfences Mermaid rendering.
  *
- * After Mermaid.js renders SVGs into .mermaid containers, this script:
+ * After Mermaid.js renders SVGs into .mermaid-raw containers, this script:
  *  1. Wraps each diagram in a styled, scrollable container
  *  2. Adds an expand button overlay
  *  3. On click, opens a fullscreen modal with pan/zoom
@@ -18,7 +18,7 @@
   var css = document.createElement('style');
   css.textContent = [
     /* Enhanced diagram container */
-    '.mermaid.diagram-enhanced {',
+    '.mermaid-raw.diagram-enhanced {',
     '  position: relative;',
     '  cursor: grab;',
     '  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);',
@@ -30,11 +30,11 @@
     '  min-height: 200px;',
     '  transition: box-shadow 0.2s ease;',
     '}',
-    '.mermaid.diagram-enhanced.inline-panning { cursor: grabbing; }',
-    '.mermaid.diagram-enhanced:hover {',
+    '.mermaid-raw.diagram-enhanced.inline-panning { cursor: grabbing; }',
+    '.mermaid-raw.diagram-enhanced:hover {',
     '  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);',
     '}',
-    '.mermaid.diagram-enhanced svg {',
+    '.mermaid-raw.diagram-enhanced svg {',
     '  transform-origin: 0 0;',
     '}',
     /* Inline zoom level badge */
@@ -52,7 +52,7 @@
     '  pointer-events: none;',
     '  z-index: 5;',
     '}',
-    '.mermaid.diagram-enhanced:hover .diagram-zoom-badge { opacity: 1; }',
+    '.mermaid-raw.diagram-enhanced:hover .diagram-zoom-badge { opacity: 1; }',
 
     /* Expand button */
     '.diagram-expand-btn {',
@@ -75,11 +75,11 @@
     '  padding: 0;',
     '  line-height: 1;',
     '}',
-    '.mermaid.diagram-enhanced:hover .diagram-expand-btn { opacity: 1; }',
+    '.mermaid-raw.diagram-enhanced:hover .diagram-expand-btn { opacity: 1; }',
     '.diagram-expand-btn:hover { background: #f5f5f5; color: #222; }',
 
     /* "Click to expand" hint */
-    '.mermaid.diagram-enhanced::after {',
+    '.mermaid-raw.diagram-enhanced::after {',
     '  content: "Click to expand";',
     '  position: absolute;',
     '  bottom: 8px;',
@@ -93,7 +93,7 @@
     '  transition: opacity 0.2s;',
     '  pointer-events: none;',
     '}',
-    '.mermaid.diagram-enhanced:hover::after { opacity: 1; }',
+    '.mermaid-raw.diagram-enhanced:hover::after { opacity: 1; }',
 
     /* ── Fullscreen modal ── */
     '.diagram-modal {',
@@ -207,7 +207,7 @@
 
     function check() {
       /* Re-query every poll — mermaid.run() may replace DOM nodes */
-      var containers = document.querySelectorAll('.mermaid');
+      var containers = document.querySelectorAll('.mermaid-raw');
       if (!containers.length) {
         if (++attempts < maxAttempts) setTimeout(check, 200);
         return;
@@ -573,7 +573,7 @@
   if (typeof document$ !== 'undefined') {
     document$.subscribe(function () {
       document
-        .querySelectorAll('.mermaid[data-diagram-enhanced]')
+        .querySelectorAll('.mermaid-raw[data-diagram-enhanced]')
         .forEach(function (el) {
           el.removeAttribute('data-diagram-enhanced');
           el.classList.remove('diagram-enhanced');

@@ -90,7 +90,7 @@ markdown_extensions:
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
-          class: mermaid
+          class: mermaid-raw
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
@@ -123,11 +123,11 @@ Create three JS/CSS files that handle Mermaid rendering and diagram interactivit
 
 > **CRITICAL: This file MUST be created. Without it, Mermaid diagrams will NOT render.**
 
-pymdownx.superfences renders mermaid blocks as `<pre class="mermaid"><code>...source...</code></pre>`. Mermaid.js cannot parse the `<code>` wrapper. This init script unwraps it and triggers rendering.
+pymdownx.superfences renders mermaid blocks as `<pre class="mermaid-raw"><code>...source...</code></pre>`. Mermaid.js cannot parse the `<code>` wrapper. This init script unwraps it and triggers rendering.
 
 Write the file using the **exact content** from the `mermaid-init.js` reference. This script:
 - Assumes the global `mermaid` object is already available (loaded via CDN UMD build)
-- Unwraps `<code>` tags from `<pre class="mermaid">` elements
+- Unwraps `<code>` tags from `<pre class="mermaid-raw">` elements
 - Calls `mermaid.run()` to render diagrams
 - Supports MkDocs Material instant navigation via `document$`
 
@@ -152,7 +152,7 @@ Write the file using the **exact content** from the `diagram-viewer.js` referenc
 .md-content { max-width: none; }
 
 /* Diagram alignment */
-.mermaid { text-align: center; }
+.mermaid-raw { text-align: center; }
 ```
 
 The responsive overrides ensure content uses available screen width instead of being locked to 976px. The diagram-viewer.js injects all interactive styles (borders, hover effects, modal, controls) at runtime. If the viewer JS fails to load, diagrams still render normally.
@@ -243,7 +243,7 @@ This single command does everything:
 - Converts all markdown to HTML
 - Applies Material for MkDocs theme
 - Generates navigation, search index, and sitemap
-- Preserves Mermaid blocks as `<pre class="mermaid">` for client-side rendering
+- Preserves Mermaid blocks as `<pre class="mermaid-raw">` for client-side rendering
 - Outputs to `docs/site/`
 
 **Do not add any post-processing steps.** MkDocs output is final.
@@ -261,7 +261,7 @@ This single command does everything:
 After the build completes:
 
 1. **Count HTML pages**: Glob `docs/site/**/*.html` — compare against markdown file count
-2. **Verify Mermaid blocks**: Grep for `class="mermaid"` in HTML files — should match markdown Mermaid block count
+2. **Verify Mermaid blocks**: Grep for `class="mermaid-raw"` in HTML files — should match markdown Mermaid block count
 3. **Verify diagram viewer**: Confirm `docs/site/js/diagram-viewer.js` exists (enables pan/zoom + fullscreen)
 4. **Check for legacy markers**: Grep for `<!-- diagram-meta` or `<!-- diagram:` — CRITICAL if found
 5. **Verify navigation**: Read `docs/site/index.html` to confirm sidebar navigation was generated
