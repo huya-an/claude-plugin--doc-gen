@@ -102,8 +102,8 @@ markdown_extensions:
   - tables
 
 extra_javascript:
-  - path: js/mermaid-init.js
-    type: module
+  - https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js
+  - js/mermaid-init.js
   - js/diagram-viewer.js
 
 extra_css:
@@ -113,9 +113,7 @@ nav:
   # Will be generated from frontmatter
 ```
 
-**Mermaid initialization:** The `js/mermaid-init.js` is an ESM module that imports Mermaid 10.9.1, unwraps the `<code>` tags pymdownx.superfences adds inside `<pre class="mermaid">`, and calls `mermaid.run()`. It MUST be loaded with `type: module`. Pin to a specific Mermaid version to avoid breaking changes.
-
-**Diagram viewer:** The `js/diagram-viewer.js` file provides interactive pan/zoom and fullscreen modal for all rendered Mermaid diagrams. It loads after mermaid-init.js renders SVGs and enhances diagrams automatically.
+**Mermaid loading order:** Three scripts load in this exact order: (1) Mermaid UMD from CDN defines the global `mermaid` object, (2) `mermaid-init.js` unwraps the `<code>` tags pymdownx.superfences adds and calls `mermaid.run()`, (3) `diagram-viewer.js` adds pan/zoom/fullscreen to rendered SVGs. Use the UMD build (not ESM) so the site works from both `file://` and `https://`. Pin to a specific version to avoid breaking changes.
 
 ### Step 3a: Create Diagram Assets
 
@@ -127,39 +125,11 @@ Create three JS/CSS files that handle Mermaid rendering and diagram interactivit
 
 pymdownx.superfences renders mermaid blocks as `<pre class="mermaid"><code>...source...</code></pre>`. Mermaid.js cannot parse the `<code>` wrapper. This init script unwraps it and triggers rendering.
 
-Write this **exact content**:
-
-```javascript
-import mermaid from "https://unpkg.com/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "default",
-  securityLevel: "loose",
-});
-
-function renderDiagrams() {
-  var els = document.querySelectorAll("pre.mermaid");
-  if (!els.length) return;
-  els.forEach(function (pre) {
-    var code = pre.querySelector("code");
-    if (code) {
-      pre.textContent = code.textContent;
-    }
-  });
-  mermaid.run({ nodes: els });
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", renderDiagrams);
-} else {
-  renderDiagrams();
-}
-
-if (typeof document$ !== "undefined") {
-  document$.subscribe(function () { renderDiagrams(); });
-}
-```
+Write the file using the **exact content** from the `mermaid-init.js` reference. This script:
+- Assumes the global `mermaid` object is already available (loaded via CDN UMD build)
+- Unwraps `<code>` tags from `<pre class="mermaid">` elements
+- Calls `mermaid.run()` to render diagrams
+- Supports MkDocs Material instant navigation via `document$`
 
 #### Create `docs/md/js/diagram-viewer.js`
 

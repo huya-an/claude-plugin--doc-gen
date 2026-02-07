@@ -7,39 +7,42 @@
  * Mermaid.js expects the source directly inside the container (no <code> wrapper).
  * This script unwraps <code> tags, then calls mermaid.run() to render SVGs.
  *
- * Loaded as type="module" so it can import mermaid ESM.
+ * Requires mermaid.min.js (UMD) to be loaded first via extra_javascript.
+ * Uses UMD build (not ESM) so the site works from both file:// and https://.
  */
-import mermaid from "https://unpkg.com/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+(function () {
+  'use strict';
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "default",
-  securityLevel: "loose",
-});
-
-function renderDiagrams() {
-  var els = document.querySelectorAll("pre.mermaid");
-  if (!els.length) return;
-
-  els.forEach(function (pre) {
-    var code = pre.querySelector("code");
-    if (code) {
-      pre.textContent = code.textContent;
-    }
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    securityLevel: 'loose',
   });
 
-  mermaid.run({ nodes: els });
-}
+  function renderDiagrams() {
+    var els = document.querySelectorAll('pre.mermaid');
+    if (!els.length) return;
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", renderDiagrams);
-} else {
-  renderDiagrams();
-}
+    els.forEach(function (pre) {
+      var code = pre.querySelector('code');
+      if (code) {
+        pre.textContent = code.textContent;
+      }
+    });
 
-/* MkDocs Material instant navigation support */
-if (typeof document$ !== "undefined") {
-  document$.subscribe(function () {
+    mermaid.run({ nodes: els });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderDiagrams);
+  } else {
     renderDiagrams();
-  });
-}
+  }
+
+  /* MkDocs Material instant navigation support */
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(function () {
+      renderDiagrams();
+    });
+  }
+})();
