@@ -9,11 +9,19 @@
       "files": [],
       "batch_size": 0
     },
-    "doc-data": {
+    "doc-data-discover": {
       "files": [],
       "batch_size": 0
     },
     "doc-events": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-data-tables": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-data-queries": {
       "files": [],
       "batch_size": 0
     },
@@ -26,6 +34,10 @@
       "batch_size": 0
     },
     "doc-testing": {
+      "files": [],
+      "batch_size": 0
+    },
+    "doc-data-overview": {
       "files": [],
       "batch_size": 0
     },

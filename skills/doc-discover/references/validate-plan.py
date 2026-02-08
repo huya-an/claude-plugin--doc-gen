@@ -10,6 +10,7 @@ Usage: python3 validate-plan.py [path-to-plan.json]
 import json
 import sys
 import os
+from datetime import datetime
 
 WAVE_ASSIGNMENTS = {
     "doc-c4": 1,
@@ -128,15 +129,29 @@ def validate(plan_path):
                                 f"but not listed in waves.\"{wave_key}\""
                             )
 
-    # --- Output ---
+    # --- Output (stdout + log file) ---
+    log_dir = os.path.dirname(plan_path) or "docs"
+    log_path = os.path.join(log_dir, "validator.log")
+
+    lines = []
+    lines.append(f"[{datetime.now().isoformat()}] Validating: {plan_path}")
+
     if errors:
-        print(f"FAIL: {len(errors)} error(s) found in {plan_path}:\n")
+        lines.append(f"FAIL: {len(errors)} error(s) found in {plan_path}:\n")
         for err in errors:
-            print(f"  - {err}")
-        return 1
+            lines.append(f"  - {err}")
+        result = 1
     else:
-        print(f"PASS: {plan_path} is valid")
-        return 0
+        lines.append(f"PASS: {plan_path} is valid")
+        result = 0
+
+    output = "\n".join(lines)
+    print(output)
+
+    with open(log_path, "a") as f:
+        f.write(output + "\n\n")
+
+    return result
 
 
 if __name__ == "__main__":

@@ -324,7 +324,40 @@ Use the **Edit** tool to update `docs/.doc-plan.json` (do NOT rewrite the entire
 
 #### 6c: Write `docs/.doc-manifest.json`
 
-Write the manifest JSON. For each enabled section, list the source files and batch size. Disabled sections can have empty arrays. Group files so no section gets more than ~30 files.
+1. Read `{SKILLS_DIR}/doc-discover/references/manifest-template.json` (where `SKILLS_DIR` is the path where you found this SKILL.md)
+2. Write its contents **verbatim** to `docs/.doc-manifest.json` using the Write tool — do not modify it yet
+
+**Fallback — if you cannot read the template**, use this exact JSON skeleton instead:
+
+```json
+{
+  "generated": "REPLACE_DATE",
+  "sections": {
+    "doc-c4":            { "files": [], "batch_size": 0 },
+    "doc-api":           { "files": [], "batch_size": 0 },
+    "doc-data-discover": { "files": [], "batch_size": 0 },
+    "doc-events":        { "files": [], "batch_size": 0 },
+    "doc-data-tables":   { "files": [], "batch_size": 0 },
+    "doc-data-queries":  { "files": [], "batch_size": 0 },
+    "doc-security":      { "files": [], "batch_size": 0 },
+    "doc-devops":        { "files": [], "batch_size": 0 },
+    "doc-testing":       { "files": [], "batch_size": 0 },
+    "doc-data-overview": { "files": [], "batch_size": 0 },
+    "doc-adr":           { "files": [], "batch_size": 0 },
+    "doc-quality":       { "files": [], "batch_size": 0 }
+  }
+}
+```
+
+3. Use the **Edit** tool to fill in project-specific values:
+   - Replace `REPLACE_DATE` with the current date
+   - For each enabled section, populate the `"files"` array with source file paths and set `"batch_size"`
+   - Disabled sections keep empty arrays
+
+**Critical rules:**
+- Section keys must match the `"id"` values in `docs/.doc-plan.json` exactly (e.g., `doc-data-discover`, NOT `doc-data`)
+- Group files so no section gets more than ~30 files
+- `doc-data-tables`, `doc-data-queries`, and `doc-data-overview` get empty file arrays — they read `docs/.data-manifest.json` produced by `doc-data-discover`
 
 ### Step 7: Validate Plan JSON — EXIT GATE (MANDATORY)
 
